@@ -1,0 +1,36 @@
+<section class="remote-page">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Product remote</p>
+      <h2>Catalog</h2>
+    </div>
+    <div class="user-pill">
+      @if (userName()) {
+        Signed in as {{ userName() }}
+      } @else {
+        Sign in from the shell
+      }
+    </div>
+  </div>
+
+  @if (lastOrder()) {
+    <p class="notice">{{ lastOrder() }}</p>
+  }
+
+  <div class="product-grid">
+    @for (product of products; track product.id) {
+      <article class="product-card">
+        <div>
+          <span class="sku">{{ product.id }}</span>
+          <h3>{{ product.name }}</h3>
+          <p>{{ product.stock }} available</p>
+        </div>
+
+        <div class="card-footer">
+          <strong>${{ product.price }}</strong>
+          <button type="button" (click)="addToOrder(product)">Add to order</button>
+        </div>
+      </article>
+    }
+  </div>
+</section>

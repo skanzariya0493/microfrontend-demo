@@ -1,0 +1,19 @@
+<main class="main">
+  <div class="content">
+    <div class="left-side">
+      <p class="eyebrow">Host application</p>
+      <h2>Choose a remote app</h2>
+      <p>Product and Order run independently but share login and workflow events.</p>
+    </div>
+    <div class="right-side">
+      <a class="tile" [routerLink]="['/product']">
+        <strong>Product</strong>
+        <span>Select catalog items and send them to Order.</span>
+      </a>
+      <a class="tile" [routerLink]="['/order']">
+        <strong>Order</strong>
+        <span>Receive product events and submit the cart.</span>
+      </a>
+    </div>
+  </div>
+</main>

@@ -1,0 +1,47 @@
+<section class="remote-page">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Order remote</p>
+      <h2>Current Order</h2>
+    </div>
+    <div class="user-pill">
+      @if (userName()) {
+        Signed in as {{ userName() }}
+      } @else {
+        Sign in from the shell
+      }
+    </div>
+  </div>
+
+  @if (submittedOrder()) {
+    <p class="notice">{{ submittedOrder() }}</p>
+  }
+
+  @if (items().length) {
+    <div class="order-list">
+      @for (item of items(); track item.id) {
+        <article class="order-row">
+          <div>
+            <span>{{ item.id }}</span>
+            <strong>{{ item.name }}</strong>
+          </div>
+          <p>{{ item.quantity }} x ${{ item.price }}</p>
+          <b>${{ item.quantity * item.price }}</b>
+        </article>
+      }
+    </div>
+
+    <footer class="summary">
+      <strong>Total: ${{ total() }}</strong>
+      <div class="actions">
+        <button type="button" class="ghost" (click)="clearCart()">Clear</button>
+        <button type="button" (click)="submitOrder()">Submit order</button>
+      </div>
+    </footer>
+  } @else {
+    <div class="empty-state">
+      <h3>No products yet</h3>
+      <p>Add a product from the Product remote and it will appear here.</p>
+    </div>
+  }
+</section>

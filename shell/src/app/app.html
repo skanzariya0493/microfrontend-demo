@@ -1,0 +1,42 @@
+@if (!isLoggedIn) {
+  <app-login (loginSuccess)="login($event)" />
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Microfrontend navigation">
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">MF</span>
+        <span>
+          <strong>Commerce Hub</strong>
+          <small>Angular federation</small>
+        </span>
+      </a>
+
+      <nav class="nav-links">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+        <a routerLink="/product" routerLinkActive="active">Product</a>
+        <a routerLink="/order" routerLinkActive="active">Order</a>
+      </nav>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Shared shell</p>
+          <h1>Microfrontend Demo</h1>
+        </div>
+
+        <div class="auth">
+          <span>
+            <strong>{{ userName }}</strong>
+            <small>{{ userEmail }} @if (userRole) { · {{ userRole }} }</small>
+          </span>
+          <button type="button" class="ghost" (click)="logout()">Logout</button>
+        </div>
+      </header>
+
+      <section class="remote-frame">
+        <router-outlet />
+      </section>
+    </main>
+  </div>
+}

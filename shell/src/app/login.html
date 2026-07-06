@@ -1,0 +1,42 @@
+<main class="login-page">
+  <section class="login-panel">
+    <div>
+      <span class="brand-mark">MF</span>
+      <p class="eyebrow">Commerce Hub</p>
+      <h1>Sign in to continue</h1>
+      <p class="intro">After login, the shell shows the shared sidebar, header, and remote content area.</p>
+    </div>
+
+    <form class="login-form" (submit)="$event.preventDefault(); submitLogin()">
+      <label>
+        Email
+        <input
+          type="email"
+          name="email"
+          autocomplete="email"
+          [disabled]="isSubmitting"
+          [(ngModel)]="email"
+        />
+      </label>
+
+      <label>
+        Password
+        <input
+          type="password"
+          name="password"
+          autocomplete="current-password"
+          [disabled]="isSubmitting"
+          [(ngModel)]="password"
+        />
+      </label>
+
+      @if (errorMessage) {
+        <p class="error">{{ errorMessage }}</p>
+      }
+
+      <button type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Checking...' : 'Login' }}
+      </button>
+    </form>
+  </section>
+</main>
