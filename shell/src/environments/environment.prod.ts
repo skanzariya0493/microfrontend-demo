@@ -3,7 +3,7 @@ export const environment = {
   apiUrl: 'https://backend-0n9w.onrender.com/api',
 
   remotes: {
-    product: 'https://product.onrender.com/remoteEntry.js',
-    order: 'https://order.onrender.com/remoteEntry.js'
+    product: 'https://product-k3f3.onrender.com/remoteEntry.js',
+    order: 'https://order-pfkq.onrender.com/remoteEntry.js'
   }
 };
