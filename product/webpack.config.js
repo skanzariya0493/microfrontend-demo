@@ -5,7 +5,11 @@ const {
 
 module.exports = withModuleFederationPlugin({
 
-  name: 'shell',
+  name: 'product',
+
+  exposes: {
+    './Component': './src/app/app.ts',
+  },
 
   shared: {
     ...shareAll({
