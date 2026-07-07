@@ -12,8 +12,8 @@ export const routes: Routes = [
     path: 'product',
     loadComponent: () =>
       loadRemoteModule({
-        type: 'module',
-        remoteEntry: 'http://localhost:4201/remoteEntry.js',
+        type: 'manifest',
+        remoteName: 'product',
         exposedModule: './Component',
       }).then((m) => m.App),
   },
@@ -21,9 +21,27 @@ export const routes: Routes = [
     path: 'order',
     loadComponent: () =>
       loadRemoteModule({
-        type: 'module',
-        remoteEntry: 'http://localhost:4202/remoteEntry.js',
+        type: 'manifest',
+        remoteName: 'order',
         exposedModule: './Component',
       }).then((m) => m.App),
-  },
+  }
+  // {
+  //   path: 'product',
+  //   loadComponent: () =>
+  //     loadRemoteModule({
+  //       type: 'module',
+  //       remoteEntry: 'http://localhost:4201/remoteEntry.js',
+  //       exposedModule: './Component',
+  //     }).then((m) => m.App),
+  // },
+  // {
+  //   path: 'order',
+  //   loadComponent: () =>
+  //     loadRemoteModule({
+  //       type: 'module',
+  //       remoteEntry: 'http://localhost:4202/remoteEntry.js',
+  //       exposedModule: './Component',
+  //     }).then((m) => m.App),
+  // },
 ];
