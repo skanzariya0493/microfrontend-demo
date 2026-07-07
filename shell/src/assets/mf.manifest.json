@@ -1,4 +1,4 @@
 {
-  "product": "http://localhost:4201/remoteEntry.js",
-  "order": "http://localhost:4202/remoteEntry.js"
+  "product": "https://product-k3f3.onrender.com/remoteEntry.js",
+  "order": "https://order-pfkq.onrender.com/remoteEntry.js"
 }
