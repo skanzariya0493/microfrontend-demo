@@ -37,6 +37,11 @@
       <button type="submit" [disabled]="isSubmitting">
         {{ isSubmitting ? 'Checking...' : 'Login' }}
       </button>
+
+      <div class="auth-links">
+        <span>Don't have an account?</span>
+        <a (click)="goToSignup()">Sign Up</a>
+      </div>
     </form>
   </section>
 </main>

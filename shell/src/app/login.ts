@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AuthService } from './auth.service';
+import { Router } from '@angular/router';
 
 export type LoginSuccessEvent = {
   name: string;
@@ -26,7 +27,11 @@ export class LoginComponent {
   protected errorMessage = '';
   protected isSubmitting = false;
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private router: Router) {}
+
+  goToSignup() {
+    this.router.navigate(['/signup']);
+  }
 
   protected submitLogin(): void {
     this.errorMessage = '';

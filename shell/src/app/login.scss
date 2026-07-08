@@ -108,3 +108,16 @@ input:disabled {
     padding: 24px;
   }
 }
+
+.auth-links {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.auth-links a {
+  color: blue;
+  cursor: pointer;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1000;
+}

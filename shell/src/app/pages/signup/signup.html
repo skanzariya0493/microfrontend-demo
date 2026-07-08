@@ -1,0 +1,69 @@
+<main class="login-page">
+  <section class="login-panel">
+    <div>
+      <span class="brand-mark">MF</span>
+      <p class="eyebrow">Commerce Hub</p>
+      <h1>Create Account</h1>
+      <p class="intro">
+        Register to access the Commerce Hub dashboard.
+      </p>
+    </div>
+
+    <form class="login-form" (ngSubmit)="signup()">
+
+      <label>
+        First Name
+        <input
+          type="text"
+          name="firstName"
+          [(ngModel)]="signupData.firstName"
+          required>
+      </label>
+
+      <label>
+        Last Name
+        <input
+          type="text"
+          name="lastName"
+          [(ngModel)]="signupData.lastName">
+      </label>
+
+      <label>
+        Email
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="signupData.email"
+          required>
+      </label>
+
+      <label>
+        Password
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="signupData.password"
+          required>
+      </label>
+
+      <label>
+        Confirm Password
+        <input
+          type="password"
+          name="confirmPassword"
+          [(ngModel)]="signupData.confirmPassword"
+          required>
+      </label>
+
+      <button type="submit">
+        Create Account
+      </button>
+
+      <div class="auth-links">
+        <span>Already have an account?</span>
+        <a routerLink="/login">Login</a>
+      </div>
+
+    </form>
+  </section>
+</main>

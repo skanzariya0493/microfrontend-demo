@@ -1,12 +1,17 @@
 import { Routes } from '@angular/router';
 import { loadRemoteModule } from '@angular-architects/module-federation';
 import { HomeComponent } from './home';
+import { SignupComponent } from './pages/signup/signup';
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
     component: HomeComponent,
+  },
+  {
+    path: 'signup',
+    component: SignupComponent
   },
   {
     path: 'product',
