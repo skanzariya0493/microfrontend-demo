@@ -1,6 +1,7 @@
 const http = require('http');
 const { env } = require('./config/env');
 const { handleApiRoutes } = require('./routes');
+const cors = require("cors");
 
 const server = http.createServer(async (req, res) => {
   setCorsHeaders(res);
@@ -20,6 +21,15 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+server.use(cors({
+  origin:[
+    "http://localhost:4200",
+    "https://shell-i86z.onrender.com"
+  ],
+  methods:["GET","POST","PUT","DELETE"]
+}));
+
+server.use(cors());
 server.listen(env.port, () => {
   console.log(`Backend API running on http://localhost:${env.port}`);
 });
