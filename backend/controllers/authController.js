@@ -3,7 +3,8 @@ const { readJsonBody, sendJson } = require('../utils/http');
 const { signJwt } = require('../utils/jwt');
 
 async function login(req, res) {
-  const { email, password } = await readJsonBody(req);
+   console.log("Login route hit", req.body);
+  const { email, password } = req.body;
   const user = users.find((item) => item.email === email && item.password === password);
 
   if (!user) {

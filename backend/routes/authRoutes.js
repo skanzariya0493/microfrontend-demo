@@ -1,19 +1,10 @@
-const { login, profile } = require('../controllers/authController');
-const { requireAuth } = require('../middleware/auth');
+const express = require("express");
+const router = express.Router();
 
-async function handleAuthRoutes(req, res, pathname) {
-  if (pathname === '/api/auth/login' && req.method === 'POST') {
-    await login(req, res);
-    return true;
-  }
+const { login, profile } = require("../controllers/authController");
+const { requireAuth } = require("../middleware/auth");
 
-  if (pathname === '/api/auth/profile' && req.method === 'GET') {
-    requireAuth(req);
-    profile(req, res);
-    return true;
-  }
+router.post("/login", login);
+router.get("/profile", requireAuth, profile);
 
-  return false;
-}
-
-module.exports = { handleAuthRoutes };
+module.exports = router;

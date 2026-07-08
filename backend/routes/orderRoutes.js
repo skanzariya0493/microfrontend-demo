@@ -1,54 +1,34 @@
+const express = require("express");
+const router = express.Router();
+
 const {
   createOrder,
   deleteOrder,
   getOrderById,
   getOrders,
   updateOrder,
-} = require('../controllers/orderController');
-const { requireAuth } = require('../middleware/auth');
+} = require("../controllers/orderController");
 
-async function handleOrderRoutes(req, res, pathname) {
-  const orderId = getResourceId(pathname, '/api/orders');
+const { requireAuth } = require("../middleware/auth");
 
-  if (pathname === '/api/orders' && req.method === 'GET') {
-    requireAuth(req);
-    getOrders(req, res);
-    return true;
-  }
+router.get("/", requireAuth, getOrders);
 
-  if (orderId && req.method === 'GET') {
-    requireAuth(req);
-    getOrderById(req, res, orderId);
-    return true;
-  }
+router.get("/:id", requireAuth, (req, res) => {
+  getOrderById(req, res, req.params.id);
+});
 
-  if (pathname === '/api/orders' && req.method === 'POST') {
-    requireAuth(req);
-    await createOrder(req, res);
-    return true;
-  }
+router.post("/", requireAuth, createOrder);
 
-  if (orderId && ['PUT', 'PATCH'].includes(req.method)) {
-    requireAuth(req);
-    await updateOrder(req, res, orderId);
-    return true;
-  }
+router.put("/:id", requireAuth, (req, res) => {
+  updateOrder(req, res, req.params.id);
+});
 
-  if (orderId && req.method === 'DELETE') {
-    requireAuth(req);
-    deleteOrder(req, res, orderId);
-    return true;
-  }
+router.patch("/:id", requireAuth, (req, res) => {
+  updateOrder(req, res, req.params.id);
+});
 
-  return false;
-}
+router.delete("/:id", requireAuth, (req, res) => {
+  deleteOrder(req, res, req.params.id);
+});
 
-function getResourceId(pathname, basePath) {
-  if (!pathname.startsWith(`${basePath}/`)) {
-    return '';
-  }
-
-  return decodeURIComponent(pathname.slice(basePath.length + 1));
-}
-
-module.exports = { handleOrderRoutes };
+module.exports = router;
