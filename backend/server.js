@@ -1,53 +1,17 @@
-const http = require('http');
-const { env } = require('./config/env');
-const { handleApiRoutes } = require('./routes');
+const express = require("express");
 const cors = require("cors");
 
-const server = http.createServer(async (req, res) => {
-  setCorsHeaders(res);
+const app = express();
 
-  if (req.method === 'OPTIONS') {
-    send(res, 204);
-    return;
-  }
+app.use(cors());
+app.use(express.json());
 
-  try {
-    await handleApiRoutes(req, res);
-  } catch (error) {
-    const statusCode = error.statusCode || 500;
-    send(res, statusCode, {
-      message: error.message || 'Internal server error',
-    });
-  }
+app.get("/", (req, res) => {
+  res.send("Backend API running");
 });
 
-server.use(cors({
-  origin:[
-    "http://localhost:4200",
-    "https://shell-i86z.onrender.com"
-  ],
-  methods:["GET","POST","PUT","DELETE"]
-}));
+const PORT = process.env.PORT || 5000;
 
-server.use(cors());
-server.listen(env.port, () => {
-  console.log(`Backend API running on http://localhost:${env.port}`);
+app.listen(PORT, () => {
+  console.log(`API running on ${PORT}`);
 });
-
-function setCorsHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', env.corsOrigin);
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-}
-
-function send(res, statusCode, payload) {
-  res.statusCode = statusCode;
-
-  if (!payload) {
-    res.end();
-    return;
-  }
-
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(payload));
-}
