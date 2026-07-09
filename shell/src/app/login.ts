@@ -1,66 +1,90 @@
-import { Component, EventEmitter, Output } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { AuthService } from './auth.service';
-import { Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
-export type LoginSuccessEvent = {
-  name: string;
-  email: string;
-  role: string;
-  token: string;
-};
+import { AuthService } from './auth.service';
+import type { LoginRequest } from './auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule
+  ],
   templateUrl: './login.html',
-  styleUrl: './login.scss',
+  styleUrls: ['./login.scss']
 })
 export class LoginComponent {
-  @Output() loginSuccess = new EventEmitter<LoginSuccessEvent>();
 
-  protected email = 'admin@example.com';
-  protected password = 'admin123';
-  protected errorMessage = '';
-  protected isSubmitting = false;
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
 
-  constructor(private readonly authService: AuthService, private router: Router) {}
+  isSubmitting = false;
+  errorMessage = '';
 
-  goToSignup() {
-    this.router.navigate(['/signup']);
+  loginForm = this.fb.nonNullable.group({
+    email: [
+      '',
+      [
+        Validators.required,
+        Validators.email
+      ]
+    ],
+    password: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(6)
+      ]
+    ]
+  });
+
+  get f() {
+    return this.loginForm.controls;
   }
 
-  protected submitLogin(): void {
-    this.errorMessage = '';
+  submitLogin(): void {
 
-    if (!this.email.trim() || !this.password.trim()) {
-      this.errorMessage = 'Email and password are required.';
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
       return;
     }
 
     this.isSubmitting = true;
-    this.authService
-      .login({
-        email: this.email.trim(),
-        password: this.password,
-      })
-      .pipe(finalize(() => (this.isSubmitting = false)))
-      .subscribe({
-        next: (response) => {
-          this.loginSuccess.emit({
-            name: response.user.name,
-            email: response.user.email,
-            role: response.user.role,
-            token: response.token,
-          });
-        },
-        error: (error: HttpErrorResponse) => {
-          this.errorMessage =
-            error.error?.message || 'Login failed. Check backend server and credentials.';
-        },
-      });
+    this.errorMessage = '';
+
+    const request: LoginRequest = this.loginForm.getRawValue();
+
+    this.authService.login(request).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+
+        const returnUrl =
+          this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+        console.log('returnUrl', returnUrl);
+        this.router.navigateByUrl(returnUrl);
+      },
+      error: (error) => {
+        this.isSubmitting = false;
+
+        this.errorMessage =
+          error?.error?.message ?? 'Invalid email or password';
+      }
+    });
+
   }
+
+  goToSignup(): void {
+    this.router.navigate(['/signup']);
+  }
+
 }

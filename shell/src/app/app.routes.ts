@@ -2,19 +2,28 @@ import { Routes } from '@angular/router';
 import { loadRemoteModule } from '@angular-architects/module-federation';
 import { HomeComponent } from './home';
 import { SignupComponent } from './pages/signup/signup';
+import { LoginComponent } from './login';
+import { authGuard, guestGuard } from './auth.guard';
 
 export const routes: Routes = [
   {
-    path: '',
-    pathMatch: 'full',
-    component: HomeComponent,
+    path: 'login',
+    component: LoginComponent,
+    canActivate: [guestGuard],
   },
   {
     path: 'signup',
-    component: SignupComponent
+    component: SignupComponent,
+    canActivate: [guestGuard],
+  },
+  {
+    path: '',
+    component: HomeComponent,
+    canActivate: [authGuard],
   },
   {
     path: 'product',
+    canActivate: [authGuard],
     loadComponent: () =>
       loadRemoteModule({
         type: 'manifest',
@@ -24,29 +33,16 @@ export const routes: Routes = [
   },
   {
     path: 'order',
+    canActivate: [authGuard],
     loadComponent: () =>
       loadRemoteModule({
         type: 'manifest',
         remoteName: 'order',
         exposedModule: './Component',
       }).then((m) => m.App),
-  }
-  // {
-  //   path: 'product',
-  //   loadComponent: () =>
-  //     loadRemoteModule({
-  //       type: 'module',
-  //       remoteEntry: 'http://localhost:4201/remoteEntry.js',
-  //       exposedModule: './Component',
-  //     }).then((m) => m.App),
-  // },
-  // {
-  //   path: 'order',
-  //   loadComponent: () =>
-  //     loadRemoteModule({
-  //       type: 'module',
-  //       remoteEntry: 'http://localhost:4202/remoteEntry.js',
-  //       exposedModule: './Component',
-  //     }).then((m) => m.App),
-  // },
+  },
+  {
+    path: '**',
+    redirectTo: '',
+  },
 ];

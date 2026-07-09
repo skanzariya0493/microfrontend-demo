@@ -1,5 +1,5 @@
-@if (!isLoggedIn) {
-  <app-login (loginSuccess)="login($event)" />
+@if (!isLoggedIn()) {
+    <router-outlet></router-outlet>
 } @else {
   <div class="app-shell">
     <aside class="sidebar" aria-label="Microfrontend navigation">
@@ -27,15 +27,15 @@
 
         <div class="auth">
           <span>
-            <strong>{{ userName }}</strong>
-            <small>{{ userEmail }} @if (userRole) { · {{ userRole }} }</small>
+            <strong>{{ userName() }}</strong>
+            <small>{{ userEmail() }} @if (userRole()) { · {{ userRole() }} }</small>
           </span>
           <button type="button" class="ghost" (click)="logout()">Logout</button>
         </div>
       </header>
 
       <section class="remote-frame">
-        <router-outlet />
+        <router-outlet></router-outlet>
       </section>
     </main>
   </div>
