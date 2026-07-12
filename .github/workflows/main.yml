@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ['.', 'backend', 'shell', 'product', 'order']
 
     steps:
       - name: Checkout Repository
@@ -18,11 +21,47 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install, Test and Build (per package)
+        shell: bash
+        run: |
+          set -e
+          DIR=${{ matrix.dir }}
+          echo "Processing $DIR"
 
-      - name: Run Tests
-        run: npm test
+          # Normalize directory for root
+          if [ "$DIR" = "." ]; then
+            PKG=package.json
+          else
+            PKG="$DIR/package.json"
+          fi
 
-      - name: Build Project
-        run: npm run build
+          if [ ! -f "$PKG" ]; then
+            echo "No package.json in $DIR, skipping"
+            exit 0
+          fi
+
+          pushd "${DIR}" >/dev/null
+
+          echo "Installing dependencies in ${DIR}"
+          npm ci
+
+          echo "Running tests in ${DIR}"
+          set +e
+          npm test
+          TEST_EXIT=$?
+          set -e
+
+          if [ $TEST_EXIT -ne 0 ]; then
+            echo "Tests failed in ${DIR} (exit $TEST_EXIT)"
+            exit $TEST_EXIT
+          fi
+
+          # Run build if script exists
+          if npm run | grep -q "build"; then
+            echo "Building ${DIR}"
+            npm run build
+          else
+            echo "No build script in ${DIR}, skipping build"
+          fi
+
+          popd >/dev/null
