@@ -18,11 +18,59 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Install Dependencies (per package)
+        run: |
+          set -e
+          # Install in root if package.json exists
+          if [ -f package.json ]; then
+            echo "Installing root dependencies"
+            npm ci
+          fi
 
-      - name: Run Tests
-        run: npm test
+          # Install in each workspace folder if a package.json exists
+          for dir in backend shell product order; do
+            if [ -f "$dir/package.json" ]; then
+              echo "Installing dependencies in $dir"
+              pushd "$dir" >/dev/null
+              npm ci
+              popd >/dev/null
+            else
+              echo "No package.json in $dir, skipping"
+            fi
+          done
 
-      - name: Build Project
-        run: npm run build
+      - name: Run Tests (per package)
+        run: |
+          set +e
+          EXIT_CODE=0
+          if [ -f package.json ]; then
+            echo "Running tests in root"
+            npm test || EXIT_CODE=$?
+          fi
+
+          for dir in backend shell product order; do
+            if [ -f "$dir/package.json" ]; then
+              echo "Running tests in $dir"
+              (cd "$dir" && npm test) || EXIT_CODE=$?
+            fi
+          done
+          set -e
+          exit $EXIT_CODE
+
+      - name: Build Project (per package)
+        run: |
+          # Build root if script exists
+          if [ -f package.json ] && npm run | grep -q "build"; then
+            npm run build
+          fi
+
+          for dir in backend shell product order; do
+            if [ -f "$dir/package.json" ]; then
+              echo "Building $dir if build script exists"
+              if (cd "$dir" && npm run | grep -q "build"); then
+                (cd "$dir" && npm run build)
+              else
+                echo "No build script in $dir, skipping"
+              fi
+            fi
+          done
