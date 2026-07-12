@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: ['.', 'backend', 'shell', 'product', 'order']
 
     steps:
       - name: Checkout Repository
@@ -18,59 +21,47 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies (per package)
+      - name: Install, Test and Build (per package)
+        shell: bash
         run: |
           set -e
-          # Install in root if package.json exists
-          if [ -f package.json ]; then
-            echo "Installing root dependencies"
-            npm ci
+          DIR=${{ matrix.dir }}
+          echo "Processing $DIR"
+
+          # Normalize directory for root
+          if [ "$DIR" = "." ]; then
+            PKG=package.json
+          else
+            PKG="$DIR/package.json"
           fi
 
-          # Install in each workspace folder if a package.json exists
-          for dir in backend shell product order; do
-            if [ -f "$dir/package.json" ]; then
-              echo "Installing dependencies in $dir"
-              pushd "$dir" >/dev/null
-              npm ci
-              popd >/dev/null
-            else
-              echo "No package.json in $dir, skipping"
-            fi
-          done
+          if [ ! -f "$PKG" ]; then
+            echo "No package.json in $DIR, skipping"
+            exit 0
+          fi
 
-      - name: Run Tests (per package)
-        run: |
+          pushd "${DIR}" >/dev/null
+
+          echo "Installing dependencies in ${DIR}"
+          npm ci
+
+          echo "Running tests in ${DIR}"
           set +e
-          EXIT_CODE=0
-          if [ -f package.json ]; then
-            echo "Running tests in root"
-            npm test || EXIT_CODE=$?
-          fi
-
-          for dir in backend shell product order; do
-            if [ -f "$dir/package.json" ]; then
-              echo "Running tests in $dir"
-              (cd "$dir" && npm test) || EXIT_CODE=$?
-            fi
-          done
+          npm test
+          TEST_EXIT=$?
           set -e
-          exit $EXIT_CODE
 
-      - name: Build Project (per package)
-        run: |
-          # Build root if script exists
-          if [ -f package.json ] && npm run | grep -q "build"; then
-            npm run build
+          if [ $TEST_EXIT -ne 0 ]; then
+            echo "Tests failed in ${DIR} (exit $TEST_EXIT)"
+            exit $TEST_EXIT
           fi
 
-          for dir in backend shell product order; do
-            if [ -f "$dir/package.json" ]; then
-              echo "Building $dir if build script exists"
-              if (cd "$dir" && npm run | grep -q "build"); then
-                (cd "$dir" && npm run build)
-              else
-                echo "No build script in $dir, skipping"
-              fi
-            fi
-          done
+          # Run build if script exists
+          if npm run | grep -q "build"; then
+            echo "Building ${DIR}"
+            npm run build
+          else
+            echo "No build script in ${DIR}, skipping build"
+          fi
+
+          popd >/dev/null
