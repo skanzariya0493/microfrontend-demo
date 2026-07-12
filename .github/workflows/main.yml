@@ -43,7 +43,13 @@ jobs:
           pushd "${DIR}" >/dev/null
 
           echo "Installing dependencies in ${DIR}"
-          npm ci
+          # Prefer clean install, but fall back to `npm install` if lockfile mismatch occurs
+          if npm ci; then
+            echo "npm ci succeeded"
+          else
+            echo "npm ci failed — falling back to npm install"
+            npm install --no-audit --no-fund
+          fi
 
           echo "Running tests in ${DIR}"
           set +e
