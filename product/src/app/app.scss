@@ -5,11 +5,27 @@
 }
 
 .remote-page {
+  position: relative;
   display: grid;
   gap: 18px;
+  min-height: 100vh;
+  padding: 32px;
+  background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1400&q=80');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.remote-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  pointer-events: none;
 }
 
 .page-heading {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -36,10 +52,11 @@ h2 {
 
 .user-pill,
 .notice {
-  border: 1px solid #cfe1dc;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 8px;
-  background: #eefaf7;
-  color: #115e59;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  backdrop-filter: blur(10px);
 }
 
 .user-pill {
@@ -61,11 +78,11 @@ h2 {
 .product-card {
   display: grid;
   min-height: 190px;
-  padding: 20px;
-  border: 1px solid #d9e1ea;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 12px 34px rgba(18, 32, 55, 0.08);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.75);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
 }
 
 .sku {
@@ -100,12 +117,20 @@ h3 {
 button {
   padding: 10px 12px;
   border: 0;
-  border-radius: 8px;
-  background: #0f766e;
+  border-radius: 12px;
+  background: #10b981;
   color: #fff;
   font: inherit;
   font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.2);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+button:hover,
+button:focus-visible {
+  background: #059669;
+  transform: translateY(-1px);
 }
 
 @media (max-width: 640px) {
