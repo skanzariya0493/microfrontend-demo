@@ -72,7 +72,7 @@ jobs:
       - name: Install dependencies
         if: matrix.changed == 'true'
         working-directory: ${{ matrix.app }}
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Build (production)
         if: matrix.changed == 'true'
