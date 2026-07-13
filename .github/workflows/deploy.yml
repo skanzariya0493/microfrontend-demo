@@ -1,0 +1,104 @@
+name: CI-CD Deploy to Render
+
+# Runs when code lands on main (i.e. after you push or merge a PR into main)
+on:
+  push:
+    branches: [main]
+
+# Allow only one deploy run at a time; cancel older in-progress ones
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------
+  # 1) Detect which service folders actually changed in this push
+  # ---------------------------------------------------------------
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      shell: ${{ steps.filter.outputs.shell }}
+      product: ${{ steps.filter.outputs.product }}
+      order: ${{ steps.filter.outputs.order }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shell:
+              - 'shell/**'
+            product:
+              - 'product/**'
+            order:
+              - 'order/**'
+            backend:
+              - 'backend/**'
+
+  # ---------------------------------------------------------------
+  # 2) Build the changed Angular apps to catch errors BEFORE deploy
+  #    (backend is plain Node, so it skips the build step)
+  # ---------------------------------------------------------------
+  build:
+    needs: changes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: shell
+            changed: ${{ needs.changes.outputs.shell }}
+          - app: product
+            changed: ${{ needs.changes.outputs.product }}
+          - app: order
+            changed: ${{ needs.changes.outputs.order }}
+    steps:
+      - name: Skip if this app did not change
+        if: matrix.changed != 'true'
+        run: echo "No changes in ${{ matrix.app }} — skipping build."
+
+      - uses: actions/checkout@v4
+        if: matrix.changed == 'true'
+
+      - uses: actions/setup-node@v4
+        if: matrix.changed == 'true'
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+
+      - name: Install dependencies
+        if: matrix.changed == 'true'
+        working-directory: ${{ matrix.app }}
+        run: npm ci
+
+      - name: Build (production)
+        if: matrix.changed == 'true'
+        working-directory: ${{ matrix.app }}
+        run: npm run build
+
+  # ---------------------------------------------------------------
+  # 3) Trigger Render deploys — only for changed services, and only
+  #    after the build job succeeded
+  # ---------------------------------------------------------------
+  deploy:
+    needs: [changes, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy shell
+        if: needs.changes.outputs.shell == 'true'
+        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_SHELL }}"
+
+      - name: Deploy product
+        if: needs.changes.outputs.product == 'true'
+        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_PRODUCT }}"
+
+      - name: Deploy order
+        if: needs.changes.outputs.order == 'true'
+        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_ORDER }}"
+
+      - name: Deploy backend
+        if: needs.changes.outputs.backend == 'true'
+        run: curl -fsSL -X POST "${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}"
