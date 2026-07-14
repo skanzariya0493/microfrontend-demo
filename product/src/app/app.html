@@ -17,20 +17,57 @@
     <p class="notice">{{ lastOrder() }}</p>
   }
 
-  <div class="product-grid">
-    @for (product of products; track product.id) {
-      <article class="product-card">
-        <div>
-          <span class="sku">{{ product.id }}</span>
-          <h3>{{ product.name }}</h3>
-          <p>{{ product.stock }} available</p>
-        </div>
+  @if (error()) {
+    <p class="notice error">{{ error() }}</p>
+  }
 
-        <div class="card-footer">
-          <strong>${{ product.price }}</strong>
-          <button type="button" (click)="addToOrder(product)">Add to order</button>
-        </div>
-      </article>
-    }
-  </div>
+  <!-- Add / Update form (separate component) -->
+  <app-product-form
+    [editing]="editingProduct()"
+    (saved)="onSaved()"
+    (cancelled)="onCancel()"
+  />
+
+  <!-- Catalog -->
+  @if (loading()) {
+    <p class="notice">Loading products…</p>
+  } @else if (products().length === 0) {
+    <p class="notice">No products yet. Add your first one above.</p>
+  } @else {
+    <div class="product-grid">
+      @for (product of products(); track product.id) {
+        <article class="product-card">
+          <div>
+            <div class="card-top">
+              <span class="sku">#{{ product.id }}</span>
+              @if (product.category) {
+                <span class="category">{{ product.category }}</span>
+              }
+            </div>
+            <h3>{{ product.name }}</h3>
+            @if (product.description) {
+              <p class="desc">{{ product.description }}</p>
+            }
+            <p class="stock" [class.low]="product.stock <= 5">
+              <span class="dot"></span>
+              @if (product.stock <= 5) {
+                Only {{ product.stock }} left
+              } @else {
+                {{ product.stock }} in stock
+              }
+            </p>
+          </div>
+
+          <div class="card-footer">
+            <strong>${{ product.price }}</strong>
+            <div class="card-actions">
+              <button type="button" class="link" (click)="edit(product)">Edit</button>
+              <button type="button" class="link danger" (click)="remove(product)">Delete</button>
+              <button type="button" (click)="addToOrder(product)">Add to order</button>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
 </section>

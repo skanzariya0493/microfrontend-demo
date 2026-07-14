@@ -1,26 +1,24 @@
-import { Component, OnDestroy, signal } from '@angular/core';
-
-type ProductItem = {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-};
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { ProductService, Product } from './product.service';
+import { ProductForm } from './product-form/product-form';
 
 @Component({
   selector: 'app-root',
   standalone: true,
+  imports: [ProductForm],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
-export class App implements OnDestroy {
+export class App implements OnInit, OnDestroy {
+  private readonly productService = inject(ProductService);
+
   protected readonly userName = signal(localStorage.getItem('mfe-user') ?? '');
   protected readonly lastOrder = signal('');
-  protected readonly products: ProductItem[] = [
-    { id: 'PRD-101', name: 'Wireless Keyboard', price: 69, stock: 14 },
-    { id: 'PRD-204', name: 'USB-C Dock', price: 129, stock: 8 },
-    { id: 'PRD-315', name: 'Noise Cancelling Headset', price: 189, stock: 5 },
-  ];
+
+  protected readonly products = signal<Product[]>([]);
+  protected readonly loading = signal(false);
+  protected readonly error = signal('');
+  protected readonly editingProduct = signal<Product | null>(null);
 
   private readonly authListener = (event: Event): void => {
     this.userName.set((event as CustomEvent<string>).detail ?? '');
@@ -36,7 +34,54 @@ export class App implements OnDestroy {
     window.addEventListener('mfe:order-submitted', this.orderListener);
   }
 
-  protected addToOrder(product: ProductItem): void {
+  ngOnInit(): void {
+    this.loadProducts();
+  }
+
+  protected loadProducts(): void {
+    this.loading.set(true);
+    this.error.set('');
+    this.productService.list().subscribe({
+      next: (res) => {
+        this.products.set(res.data ?? []);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('Could not load products. Is the backend running?');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  protected edit(product: Product): void {
+    this.editingProduct.set(product);
+  }
+
+  protected onSaved(): void {
+    this.editingProduct.set(null);
+    this.loadProducts();
+  }
+
+  protected onCancel(): void {
+    this.editingProduct.set(null);
+  }
+
+  protected remove(product: Product): void {
+    if (product.id === undefined) {
+      return;
+    }
+    this.productService.remove(product.id).subscribe({
+      next: () => {
+        if (this.editingProduct()?.id === product.id) {
+          this.editingProduct.set(null);
+        }
+        this.loadProducts();
+      },
+      error: () => this.error.set('Failed to delete product'),
+    });
+  }
+
+  protected addToOrder(product: Product): void {
     localStorage.setItem('mfe-selected-product', JSON.stringify(product));
     window.dispatchEvent(new CustomEvent('mfe:add-to-order', { detail: product }));
   }
