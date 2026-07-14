@@ -1,0 +1,39 @@
+<section class="cart">
+  <div class="cart-head">
+    <h3>Your cart</h3>
+    <span class="count">{{ cart.totalItems() }} item(s)</span>
+  </div>
+
+  @if (cart.items().length === 0) {
+    <p class="empty">Your cart is empty. Add products from the catalog above.</p>
+  } @else {
+    <ul class="cart-items">
+      @for (item of cart.items(); track item.id) {
+        <li class="cart-item">
+          <div class="info">
+            <strong>{{ item.name }}</strong>
+            <span class="meta">${{ item.price | number: '1.2-2' }} each</span>
+          </div>
+
+          <div class="qty">
+            <button type="button" class="step" (click)="cart.decrement(item.id)" aria-label="Decrease quantity">−</button>
+            <span class="qnum">{{ item.quantity }}</span>
+            <button type="button" class="step" (click)="cart.increment(item.id)" aria-label="Increase quantity">+</button>
+          </div>
+
+          <strong class="line-total">${{ item.price * item.quantity | number: '1.2-2' }}</strong>
+
+          <button type="button" class="remove" (click)="cart.remove(item.id)" aria-label="Remove item">✕</button>
+        </li>
+      }
+    </ul>
+
+    <div class="cart-footer">
+      <button type="button" class="ghost" (click)="cart.clear()">Clear cart</button>
+      <div class="totals">
+        <span>Total items: <strong>{{ cart.totalItems() }}</strong></span>
+        <span class="grand">Total: <strong>${{ cart.totalPrice() | number: '1.2-2' }}</strong></span>
+      </div>
+    </div>
+  }
+</section>

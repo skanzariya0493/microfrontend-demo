@@ -1,16 +1,19 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { ProductService, Product } from './product.service';
 import { ProductForm } from './product-form/product-form';
+import { CartList } from './cart-list/cart-list';
+import { CartService } from './cart.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [ProductForm],
+  imports: [ProductForm, CartList],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App implements OnInit, OnDestroy {
   private readonly productService = inject(ProductService);
+  protected readonly cart = inject(CartService);
 
   protected readonly userName = signal(localStorage.getItem('mfe-user') ?? '');
   protected readonly lastOrder = signal('');
@@ -81,9 +84,8 @@ export class App implements OnInit, OnDestroy {
     });
   }
 
-  protected addToOrder(product: Product): void {
-    localStorage.setItem('mfe-selected-product', JSON.stringify(product));
-    window.dispatchEvent(new CustomEvent('mfe:add-to-order', { detail: product }));
+  protected addToCart(product: Product): void {
+    this.cart.add(product);
   }
 
   ngOnDestroy(): void {
