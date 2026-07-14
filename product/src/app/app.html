@@ -63,11 +63,14 @@
             <div class="card-actions">
               <button type="button" class="link" (click)="edit(product)">Edit</button>
               <button type="button" class="link danger" (click)="remove(product)">Delete</button>
-              <button type="button" (click)="addToOrder(product)">Add to order</button>
+              <button type="button" (click)="addToCart(product)">Add to cart</button>
             </div>
           </div>
         </article>
       }
     </div>
   }
+
+  <!-- Shopping cart (separate component) -->
+  <app-cart-list />
 </section>
