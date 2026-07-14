@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const pool = require("./config/db");
 const { initProductTable } = require("./models/productModel");
+const { initOrderTable } = require("./models/orderModel");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const orderRoutes = require("./routes/orderRoutes");
@@ -15,8 +16,9 @@ pool.connect()
     console.log("Connected to Neon PostgreSQL");
     return initProductTable();
   })
+  .then(() => initOrderTable())
   .then(() => {
-    console.log("Products table ready");
+    console.log("Products and orders tables ready");
   })
   .catch((err) => {
     console.error("Database connection failed:", err);

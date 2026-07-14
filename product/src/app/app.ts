@@ -1,13 +1,16 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { DecimalPipe, UpperCasePipe } from '@angular/common';
 import { ProductService, Product } from './product.service';
 import { ProductForm } from './product-form/product-form';
 import { CartList } from './cart-list/cart-list';
 import { CartService } from './cart.service';
+import { Checkout } from './checkout/checkout';
+import { PlacedOrder } from './order.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [ProductForm, CartList],
+  imports: [ProductForm, CartList, Checkout, DecimalPipe, UpperCasePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -22,6 +25,9 @@ export class App implements OnInit, OnDestroy {
   protected readonly loading = signal(false);
   protected readonly error = signal('');
   protected readonly editingProduct = signal<Product | null>(null);
+
+  protected readonly checkingOut = signal(false);
+  protected readonly placedOrder = signal<PlacedOrder | null>(null);
 
   private readonly authListener = (event: Event): void => {
     this.userName.set((event as CustomEvent<string>).detail ?? '');
@@ -86,6 +92,24 @@ export class App implements OnInit, OnDestroy {
 
   protected addToCart(product: Product): void {
     this.cart.add(product);
+  }
+
+  protected startCheckout(): void {
+    this.placedOrder.set(null);
+    this.checkingOut.set(true);
+  }
+
+  protected onCheckoutCancel(): void {
+    this.checkingOut.set(false);
+  }
+
+  protected onOrderPlaced(order: PlacedOrder): void {
+    this.checkingOut.set(false);
+    this.placedOrder.set(order);
+  }
+
+  protected dismissOrder(): void {
+    this.placedOrder.set(null);
   }
 
   ngOnDestroy(): void {
