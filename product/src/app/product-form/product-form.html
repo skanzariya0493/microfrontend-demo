@@ -1,0 +1,78 @@
+<form class="product-form" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="form-head">
+    <h3>{{ isEditing() ? 'Update product' : 'Add product' }}</h3>
+    @if (isEditing()) {
+      <span class="editing-tag">Editing #{{ editing()?.id }}</span>
+    }
+  </div>
+
+  @if (error()) {
+    <p class="form-error">{{ error() }}</p>
+  }
+
+  <div class="form-grid">
+    <label class="field">
+      <span>Name</span>
+      <input type="text" formControlName="name" placeholder="Wireless Keyboard" />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <small class="err">Name is required (min 2 characters).</small>
+      }
+    </label>
+
+    <label class="field">
+      <span>Category</span>
+      <select formControlName="category">
+        <option value="">Select category</option>
+        @for (category of categories; track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      <span>Price ($)</span>
+      <input type="number" formControlName="price" min="0" max="1000000" step="0.01" />
+      @if (form.controls.price.touched && form.controls.price.invalid) {
+        @if (form.controls.price.hasError('required')) {
+          <small class="err">Price is required.</small>
+        } @else if (form.controls.price.hasError('min')) {
+          <small class="err">Price cannot be negative.</small>
+        } @else if (form.controls.price.hasError('max')) {
+          <small class="err">Price is too large.</small>
+        } @else if (form.controls.price.hasError('pattern')) {
+          <small class="err">Enter a valid amount (up to 2 decimals).</small>
+        }
+      }
+    </label>
+
+    <label class="field">
+      <span>Stock</span>
+      <input type="number" formControlName="stock" min="0" max="1000000" step="1" />
+      @if (form.controls.stock.touched && form.controls.stock.invalid) {
+        @if (form.controls.stock.hasError('required')) {
+          <small class="err">Stock is required.</small>
+        } @else if (form.controls.stock.hasError('min')) {
+          <small class="err">Stock cannot be negative.</small>
+        } @else if (form.controls.stock.hasError('max')) {
+          <small class="err">Stock is too large.</small>
+        } @else if (form.controls.stock.hasError('pattern')) {
+          <small class="err">Enter a whole number (no decimals).</small>
+        }
+      }
+    </label>
+
+    <label class="field field-wide">
+      <span>Description</span>
+      <textarea formControlName="description" rows="2" placeholder="Short description"></textarea>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="primary" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : isEditing() ? 'Save changes' : 'Add product' }}
+    </button>
+    @if (isEditing()) {
+      <button type="button" class="ghost" (click)="cancel()">Cancel</button>
+    }
+  </div>
+</form>

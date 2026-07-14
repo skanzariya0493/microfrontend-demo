@@ -72,23 +72,74 @@ h2 {
   border-radius: 16px;
   background: rgba(15, 23, 42, 0.75);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+  color: #e2e8f0;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .sku {
   display: inline-block;
-  margin-bottom: 12px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 12px;
   font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.category {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 h3 {
   font-size: 19px;
+  color: #f8fafc;
 }
 
 .product-card p {
   margin-top: 8px;
-  color: #5a6b80;
+  color: #94a3b8;
+}
+
+.stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stock .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.stock.low {
+  color: #fca5a5;
+}
+
+.stock.low .dot {
+  background: #ef4444;
 }
 
 .card-footer {
@@ -120,6 +171,45 @@ button:hover,
 button:focus-visible {
   background: #059669;
   transform: translateY(-1px);
+}
+
+.notice.error {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+}
+
+/* ---------- Card actions ---------- */
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button.link {
+  padding: 8px 10px;
+  background: transparent;
+  color: #cbd5e1;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+button.link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: none;
+}
+
+button.link.danger {
+  color: #fca5a5;
+}
+
+button.link.danger:hover {
+  background: rgba(239, 68, 68, 0.14);
+}
+
+.desc {
+  font-size: 13px;
 }
 
 @media (max-width: 640px) {

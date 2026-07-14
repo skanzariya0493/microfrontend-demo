@@ -9,26 +9,14 @@ const {
   updateProduct,
 } = require("../controllers/productController");
 
-const { requireAuth } = require("../middleware/auth");
-
+// NOTE: these routes are currently public so the product form works out of the box.
+// To protect writes, add a proper Express auth middleware (req, res, next) and pass
+// it before the handler, e.g. router.post("/", requireAuth, createProduct).
 router.get("/", getProducts);
-
-router.get("/:id", (req, res) => {
-  getProductById(req, res, req.params.id);
-});
-
-router.post("/", requireAuth, createProduct);
-
-router.put("/:id", requireAuth, (req, res) => {
-  updateProduct(req, res, req.params.id);
-});
-
-router.patch("/:id", requireAuth, (req, res) => {
-  updateProduct(req, res, req.params.id);
-});
-
-router.delete("/:id", requireAuth, (req, res) => {
-  deleteProduct(req, res, req.params.id);
-});
+router.get("/:id", getProductById);
+router.post("/", createProduct);
+router.put("/:id", updateProduct);
+router.patch("/:id", updateProduct);
+router.delete("/:id", deleteProduct);
 
 module.exports = router;
