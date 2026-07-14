@@ -6,4 +6,4 @@ const isLocalhost =
 
 export const API_BASE_URL = isLocalhost
   ? 'http://localhost:5000/api'
-  : 'https://YOUR-BACKEND.onrender.com/api';
+  : 'https://backend-0n9w.onrender.com/api';
