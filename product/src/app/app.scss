@@ -10,18 +10,7 @@
   gap: 18px;
   min-height: 100vh;
   padding: 32px;
-  background-image: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1400&q=80');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.remote-page::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  pointer-events: none;
+  background: #0f172a;
 }
 
 .page-heading {
