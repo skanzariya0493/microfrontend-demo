@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { CartService } from '../cart.service';
 
@@ -11,4 +11,7 @@ import { CartService } from '../cart.service';
 })
 export class CartList {
   protected readonly cart = inject(CartService);
+
+  /** Emitted when the user wants to proceed to checkout. */
+  readonly checkout = output<void>();
 }

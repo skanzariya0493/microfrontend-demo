@@ -71,6 +71,30 @@
     </div>
   }
 
-  <!-- Shopping cart (separate component) -->
-  <app-cart-list />
+  <!-- Order confirmation -->
+  @if (placedOrder(); as order) {
+    <div class="order-confirmation">
+      <div class="oc-head">
+        <span class="oc-check">✓</span>
+        <div>
+          <h3>Order #{{ order.id }} placed!</h3>
+          <p>Thanks {{ order.customerName }} — a confirmation was sent to {{ order.email }}.</p>
+        </div>
+      </div>
+      <ul class="oc-meta">
+        <li><span>Payment</span><strong>{{ order.paymentMethod | uppercase }}</strong></li>
+        <li><span>Items</span><strong>{{ order.items.length }}</strong></li>
+        <li><span>Total</span><strong>${{ order.total | number: '1.2-2' }}</strong></li>
+        <li><span>Status</span><strong>{{ order.status }}</strong></li>
+      </ul>
+      <button type="button" class="oc-continue" (click)="dismissOrder()">Continue shopping</button>
+    </div>
+  }
+
+  <!-- Cart / Checkout (separate components) -->
+  @if (checkingOut()) {
+    <app-checkout (placed)="onOrderPlaced($event)" (cancelled)="onCheckoutCancel()" />
+  } @else {
+    <app-cart-list (checkout)="startCheckout()" />
+  }
 </section>

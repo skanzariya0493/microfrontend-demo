@@ -179,6 +179,90 @@ button:focus-visible {
   color: #fecaca;
 }
 
+/* ---------- Order confirmation ---------- */
+.order-confirmation {
+  padding: 22px;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: 16px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #e2e8f0;
+}
+
+.oc-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.oc-check {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.oc-head h3 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 19px;
+}
+
+.oc-head p {
+  margin: 4px 0 0;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.oc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px;
+  margin: 18px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.oc-meta li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.oc-meta span {
+  color: #94a3b8;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.oc-meta strong {
+  color: #f8fafc;
+  font-size: 16px;
+}
+
+.oc-continue {
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #10b981;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.2);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.oc-continue:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
 /* ---------- Card actions ---------- */
 .card-actions {
   display: flex;

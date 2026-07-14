@@ -171,6 +171,29 @@ button.ghost:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.checkout-row {
+  margin-top: 16px;
+}
+
+.checkout-btn {
+  width: 100%;
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #10b981;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.2);
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.checkout-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
 @media (max-width: 640px) {
   .cart-item {
     grid-template-columns: 1fr auto;

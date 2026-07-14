@@ -35,5 +35,11 @@
         <span class="grand">Total: <strong>${{ cart.totalPrice() | number: '1.2-2' }}</strong></span>
       </div>
     </div>
+
+    <div class="checkout-row">
+      <button type="button" class="checkout-btn" (click)="checkout.emit()">
+        Proceed to checkout
+      </button>
+    </div>
   }
 </section>
