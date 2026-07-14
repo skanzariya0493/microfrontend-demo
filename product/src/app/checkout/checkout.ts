@@ -1,5 +1,4 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, OnDestroy, computed, inject, output, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import {
   AbstractControl,
@@ -7,6 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { CartService } from '../cart.service';
 import { OrderService, PlacedOrder } from '../order.service';
 
@@ -22,10 +22,12 @@ type PaymentMethod = 'cod' | 'card' | 'upi';
   templateUrl: './checkout.html',
   styleUrl: './checkout.scss',
 })
-export class Checkout {
+export class Checkout implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   protected readonly cart = inject(CartService);
   private readonly orderService = inject(OrderService);
+
+  private methodSub?: Subscription;
 
   /** Emitted with the created order after a successful checkout. */
   readonly placed = output<PlacedOrder>();
@@ -36,6 +38,18 @@ export class Checkout {
   protected readonly placing = signal(false);
   protected readonly error = signal('');
   protected readonly method = signal<PaymentMethod>('cod');
+
+  /** 1 = shipping address, 2 = payment. */
+  protected readonly step = signal<1 | 2>(1);
+
+  private readonly addressControls = [
+    'customerName',
+    'email',
+    'phone',
+    'addressLine',
+    'city',
+    'postalCode',
+  ] as const;
 
   protected readonly shipping = computed(() => {
     const subtotal = this.cart.totalPrice();
@@ -60,13 +74,17 @@ export class Checkout {
   });
 
   constructor() {
-    // Toggle validators on the dummy payment fields as the method changes
-    this.form.controls.paymentMethod.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((method) => {
-        this.method.set(method);
-        this.applyPaymentValidators(method);
-      });
+    // Toggle validators on the dummy payment fields as the method changes.
+    // Manual subscription (not takeUntilDestroyed) to stay robust under module
+    // federation, where the rxjs-interop injection context can be unavailable.
+    this.methodSub = this.form.controls.paymentMethod.valueChanges.subscribe((method) => {
+      this.method.set(method as PaymentMethod);
+      this.applyPaymentValidators(method as PaymentMethod);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.methodSub?.unsubscribe();
   }
 
   private applyPaymentValidators(method: PaymentMethod): void {
@@ -94,7 +112,27 @@ export class Checkout {
     }
   }
 
+  /** Step 1 → 2: validate only the address fields, then move to payment. */
+  protected goToPayment(): void {
+    const invalid = this.addressControls.some((name) => this.form.get(name)!.invalid);
+    if (invalid) {
+      this.addressControls.forEach((name) => this.form.get(name)!.markAsTouched());
+      return;
+    }
+    this.error.set('');
+    this.step.set(2);
+  }
+
+  protected backToAddress(): void {
+    this.step.set(1);
+  }
+
   protected placeOrder(): void {
+    // On the address step, "submit" (e.g. Enter key) just advances to payment
+    if (this.step() === 1) {
+      this.goToPayment();
+      return;
+    }
     if (this.cart.items().length === 0) {
       this.error.set('Your cart is empty.');
       return;

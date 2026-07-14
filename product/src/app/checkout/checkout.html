@@ -4,132 +4,172 @@
     <button type="button" class="ghost" (click)="cancel()">← Back to cart</button>
   </div>
 
+  <!-- Stepper -->
+  <ol class="steps">
+    <li class="step-item" [class.active]="step() === 1" [class.done]="step() > 1">
+      <span class="num">{{ step() > 1 ? '✓' : '1' }}</span>
+      <span class="label">Shipping address</span>
+    </li>
+    <li class="divider"></li>
+    <li class="step-item" [class.active]="step() === 2">
+      <span class="num">2</span>
+      <span class="label">Payment</span>
+    </li>
+  </ol>
+
   @if (error()) {
     <p class="form-error">{{ error() }}</p>
   }
 
   <div class="checkout-body">
-    <!-- Left: address + payment form -->
     <form class="checkout-form" [formGroup]="form" (ngSubmit)="placeOrder()">
-      <h4>Shipping address</h4>
-      <div class="grid">
-        <label class="field field-wide">
-          <span>Full name</span>
-          <input type="text" formControlName="customerName" placeholder="John Doe" />
-          @if (form.controls.customerName.touched && form.controls.customerName.invalid) {
-            <small class="err">Enter your full name.</small>
-          }
-        </label>
-
-        <label class="field">
-          <span>Email</span>
-          <input type="email" formControlName="email" placeholder="john@example.com" />
-          @if (form.controls.email.touched && form.controls.email.invalid) {
-            <small class="err">Enter a valid email.</small>
-          }
-        </label>
-
-        <label class="field">
-          <span>Phone</span>
-          <input type="tel" formControlName="phone" placeholder="+1 555 123 4567" />
-          @if (form.controls.phone.touched && form.controls.phone.invalid) {
-            <small class="err">Enter a valid phone number.</small>
-          }
-        </label>
-
-        <label class="field field-wide">
-          <span>Address</span>
-          <input type="text" formControlName="addressLine" placeholder="Street, apartment, etc." />
-          @if (form.controls.addressLine.touched && form.controls.addressLine.invalid) {
-            <small class="err">Enter your address.</small>
-          }
-        </label>
-
-        <label class="field">
-          <span>City</span>
-          <input type="text" formControlName="city" placeholder="Mumbai" />
-          @if (form.controls.city.touched && form.controls.city.invalid) {
-            <small class="err">City is required.</small>
-          }
-        </label>
-
-        <label class="field">
-          <span>State</span>
-          <input type="text" formControlName="state" placeholder="Maharashtra" />
-        </label>
-
-        <label class="field">
-          <span>Postal code</span>
-          <input type="text" formControlName="postalCode" placeholder="400001" />
-          @if (form.controls.postalCode.touched && form.controls.postalCode.invalid) {
-            <small class="err">Enter a valid postal code.</small>
-          }
-        </label>
-      </div>
-
-      <h4>Payment method</h4>
-      <div class="pay-options">
-        <label class="pay-option" [class.active]="method() === 'cod'">
-          <input type="radio" formControlName="paymentMethod" value="cod" />
-          <span class="pay-label">Cash on delivery</span>
-          <span class="pay-hint">Pay when it arrives</span>
-        </label>
-        <label class="pay-option" [class.active]="method() === 'card'">
-          <input type="radio" formControlName="paymentMethod" value="card" />
-          <span class="pay-label">Card</span>
-          <span class="pay-hint">Dummy — no real charge</span>
-        </label>
-        <label class="pay-option" [class.active]="method() === 'upi'">
-          <input type="radio" formControlName="paymentMethod" value="upi" />
-          <span class="pay-label">UPI</span>
-          <span class="pay-hint">Dummy — no real charge</span>
-        </label>
-      </div>
-
-      @if (method() === 'card') {
-        <div class="grid pay-fields">
+      <!-- STEP 1: address -->
+      @if (step() === 1) {
+        <h4>Shipping address</h4>
+        <div class="grid">
           <label class="field field-wide">
-            <span>Card number</span>
-            <input type="text" formControlName="cardNumber" placeholder="4242 4242 4242 4242" />
-            @if (form.controls.cardNumber.touched && form.controls.cardNumber.invalid) {
-              <small class="err">Enter a valid card number.</small>
+            <span>Full name</span>
+            <input type="text" formControlName="customerName" placeholder="John Doe" />
+            @if (form.controls.customerName.touched && form.controls.customerName.invalid) {
+              <small class="err">Enter your full name.</small>
             }
           </label>
+
           <label class="field">
-            <span>Expiry (MM/YY)</span>
-            <input type="text" formControlName="cardExpiry" placeholder="08/28" />
-            @if (form.controls.cardExpiry.touched && form.controls.cardExpiry.invalid) {
-              <small class="err">Use MM/YY format.</small>
+            <span>Email</span>
+            <input type="email" formControlName="email" placeholder="john@example.com" />
+            @if (form.controls.email.touched && form.controls.email.invalid) {
+              <small class="err">Enter a valid email.</small>
             }
           </label>
+
           <label class="field">
-            <span>CVV</span>
-            <input type="password" formControlName="cardCvv" placeholder="123" />
-            @if (form.controls.cardCvv.touched && form.controls.cardCvv.invalid) {
-              <small class="err">3–4 digits.</small>
+            <span>Phone</span>
+            <input type="tel" formControlName="phone" placeholder="+1 555 123 4567" />
+            @if (form.controls.phone.touched && form.controls.phone.invalid) {
+              <small class="err">Enter a valid phone number.</small>
+            }
+          </label>
+
+          <label class="field field-wide">
+            <span>Address</span>
+            <input type="text" formControlName="addressLine" placeholder="Street, apartment, etc." />
+            @if (form.controls.addressLine.touched && form.controls.addressLine.invalid) {
+              <small class="err">Enter your address.</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>City</span>
+            <input type="text" formControlName="city" placeholder="Mumbai" />
+            @if (form.controls.city.touched && form.controls.city.invalid) {
+              <small class="err">City is required.</small>
+            }
+          </label>
+
+          <label class="field">
+            <span>State</span>
+            <input type="text" formControlName="state" placeholder="Maharashtra" />
+          </label>
+
+          <label class="field">
+            <span>Postal code</span>
+            <input type="text" formControlName="postalCode" placeholder="400001" />
+            @if (form.controls.postalCode.touched && form.controls.postalCode.invalid) {
+              <small class="err">Enter a valid postal code.</small>
             }
           </label>
         </div>
-      } @else if (method() === 'upi') {
-        <div class="grid pay-fields">
-          <label class="field field-wide">
-            <span>UPI ID</span>
-            <input type="text" formControlName="upiId" placeholder="name@bank" />
-            @if (form.controls.upiId.touched && form.controls.upiId.invalid) {
-              <small class="err">Enter a valid UPI ID (e.g. name@bank).</small>
-            }
-          </label>
+
+        <div class="checkout-actions">
+          <button type="button" (click)="goToPayment()">Continue to payment →</button>
         </div>
       }
 
-      <div class="checkout-actions">
-        <button type="submit" [disabled]="placing() || cart.items().length === 0">
-          {{ placing() ? 'Placing order…' : 'Place order' }}
-        </button>
-      </div>
+      <!-- STEP 2: payment -->
+      @if (step() === 2) {
+        <!-- Address recap -->
+        <div class="recap">
+          <div>
+            <span class="recap-label">Deliver to</span>
+            <strong>{{ form.controls.customerName.value }}</strong>
+            <p>
+              {{ form.controls.addressLine.value }}, {{ form.controls.city.value }}
+              @if (form.controls.state.value) { , {{ form.controls.state.value }} }
+              — {{ form.controls.postalCode.value }}
+            </p>
+            <p class="recap-contact">{{ form.controls.email.value }} · {{ form.controls.phone.value }}</p>
+          </div>
+          <button type="button" class="ghost small" (click)="backToAddress()">Edit</button>
+        </div>
+
+        <h4>Payment method</h4>
+        <div class="pay-options">
+          <label class="pay-option" [class.active]="method() === 'cod'">
+            <input type="radio" formControlName="paymentMethod" value="cod" />
+            <span class="pay-label">Cash on delivery</span>
+            <span class="pay-hint">Pay when it arrives</span>
+          </label>
+          <label class="pay-option" [class.active]="method() === 'card'">
+            <input type="radio" formControlName="paymentMethod" value="card" />
+            <span class="pay-label">Card</span>
+            <span class="pay-hint">Dummy — no real charge</span>
+          </label>
+          <label class="pay-option" [class.active]="method() === 'upi'">
+            <input type="radio" formControlName="paymentMethod" value="upi" />
+            <span class="pay-label">UPI</span>
+            <span class="pay-hint">Dummy — no real charge</span>
+          </label>
+        </div>
+
+        @if (method() === 'card') {
+          <div class="grid pay-fields">
+            <label class="field field-wide">
+              <span>Card number</span>
+              <input type="text" formControlName="cardNumber" placeholder="4242 4242 4242 4242" />
+              @if (form.controls.cardNumber.touched && form.controls.cardNumber.invalid) {
+                <small class="err">Enter a valid card number.</small>
+              }
+            </label>
+            <label class="field">
+              <span>Expiry (MM/YY)</span>
+              <input type="text" formControlName="cardExpiry" placeholder="08/28" />
+              @if (form.controls.cardExpiry.touched && form.controls.cardExpiry.invalid) {
+                <small class="err">Use MM/YY format.</small>
+              }
+            </label>
+            <label class="field">
+              <span>CVV</span>
+              <input type="password" formControlName="cardCvv" placeholder="123" />
+              @if (form.controls.cardCvv.touched && form.controls.cardCvv.invalid) {
+                <small class="err">3–4 digits.</small>
+              }
+            </label>
+          </div>
+        } @else if (method() === 'upi') {
+          <div class="grid pay-fields">
+            <label class="field field-wide">
+              <span>UPI ID</span>
+              <input type="text" formControlName="upiId" placeholder="name@bank" />
+              @if (form.controls.upiId.touched && form.controls.upiId.invalid) {
+                <small class="err">Enter a valid UPI ID (e.g. name@bank).</small>
+              }
+            </label>
+          </div>
+        }
+
+        <p class="dummy-note">This is a demo — no real payment is processed.</p>
+
+        <div class="checkout-actions two">
+          <button type="button" class="ghost" (click)="backToAddress()">← Back</button>
+          <button type="submit" [disabled]="placing() || cart.items().length === 0">
+            {{ placing() ? 'Placing order…' : 'Place order · $' + (grandTotal() | number: '1.2-2') }}
+          </button>
+        </div>
+      }
     </form>
 
-    <!-- Right: order summary -->
+    <!-- Order summary (always visible) -->
     <aside class="summary">
       <h4>Order summary</h4>
       @if (cart.items().length === 0) {
