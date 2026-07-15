@@ -2,6 +2,8 @@ const pool = require("../config/db");
 
 const COLUMNS = `
   id,
+  user_id AS "userId",
+  user_email AS "userEmail",
   customer_name AS "customerName",
   email,
   phone,
@@ -50,14 +52,17 @@ async function initOrderTable() {
       created_at TIMESTAMPTZ DEFAULT now()
     );
   `);
+  // Link orders to the user who placed them (added for existing tables too)
+  await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER;`);
+  await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_email TEXT;`);
 }
 
 async function insert(data, executor = pool) {
   const result = await executor.query(
     `INSERT INTO orders
        (customer_name, email, phone, address_line, city, state, postal_code,
-        payment_method, items, subtotal, shipping, total, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        payment_method, items, subtotal, shipping, total, status, user_id, user_email)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
      RETURNING ${COLUMNS}`,
     [
       data.customerName,
@@ -73,6 +78,8 @@ async function insert(data, executor = pool) {
       data.shipping,
       data.total,
       data.status || "pending",
+      data.userId ?? null,
+      data.userEmail ?? null,
     ]
   );
   return normalize(result.rows[0]);
@@ -80,6 +87,14 @@ async function insert(data, executor = pool) {
 
 async function findAll() {
   const result = await pool.query(`SELECT ${COLUMNS} FROM orders ORDER BY id DESC`);
+  return result.rows.map(normalize);
+}
+
+async function findByUser(userId) {
+  const result = await pool.query(
+    `SELECT ${COLUMNS} FROM orders WHERE user_id = $1 ORDER BY id DESC`,
+    [userId]
+  );
   return result.rows.map(normalize);
 }
 
@@ -92,5 +107,6 @@ module.exports = {
   initOrderTable,
   insert,
   findAll,
+  findByUser,
   findById,
 };

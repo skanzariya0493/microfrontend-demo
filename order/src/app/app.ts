@@ -1,99 +1,68 @@
-import { Component, OnDestroy, computed, signal } from '@angular/core';
-
-type OrderItem = {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  quantity: number;
-};
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { DatePipe, DecimalPipe, UpperCasePipe } from '@angular/common';
+import { Order, OrderService } from './order.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
+  imports: [DatePipe, DecimalPipe, UpperCasePipe],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
-export class App implements OnDestroy {
+export class App implements OnInit, OnDestroy {
+  private readonly orderService = inject(OrderService);
+
   protected readonly userName = signal(localStorage.getItem('mfe-user') ?? '');
-  protected readonly items = signal<OrderItem[]>(this.loadInitialCart());
-  protected readonly submittedOrder = signal('');
-  protected readonly total = computed(() =>
-    this.items().reduce((sum, item) => sum + item.price * item.quantity, 0),
-  );
+  protected readonly orders = signal<Order[]>([]);
+  protected readonly loading = signal(false);
+  protected readonly error = signal('');
+  protected readonly scope = signal<'all' | 'own'>('own');
+  protected readonly role = signal('');
 
   private readonly authListener = (event: Event): void => {
     this.userName.set((event as CustomEvent<string>).detail ?? '');
-  };
-
-  private readonly productListener = (event: Event): void => {
-    const product = (event as CustomEvent<Omit<OrderItem, 'quantity'>>).detail;
-    this.addProduct(product);
+    this.loadOrders();
   };
 
   constructor() {
     window.addEventListener('mfe:auth-changed', this.authListener);
-    window.addEventListener('mfe:add-to-order', this.productListener);
+    // Refresh the list when a new order is submitted from the product remote
+    window.addEventListener('mfe:order-submitted', this.reload);
   }
 
-  protected submitOrder(): void {
-    if (!this.items().length) {
-      return;
-    }
-
-    const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-    const total = this.total();
-    this.submittedOrder.set(`${orderId} submitted for $${total}`);
-    this.items.set([]);
-    localStorage.removeItem('mfe-order-cart');
-    localStorage.removeItem('mfe-selected-product');
-    window.dispatchEvent(new CustomEvent('mfe:order-submitted', { detail: { orderId, total } }));
+  ngOnInit(): void {
+    this.loadOrders();
   }
 
-  protected clearCart(): void {
-    this.items.set([]);
-    localStorage.removeItem('mfe-order-cart');
-  }
+  private readonly reload = (): void => this.loadOrders();
 
-  private addProduct(product: Omit<OrderItem, 'quantity'>): void {
-    this.items.update((items) => {
-      const existing = items.find((item) => item.id === product.id);
-      const next = existing
-        ? items.map((item) =>
-            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
-          )
-        : [...items, { ...product, quantity: 1 }];
-
-      localStorage.setItem('mfe-order-cart', JSON.stringify(next));
-      return next;
+  protected loadOrders(): void {
+    this.loading.set(true);
+    this.error.set('');
+    this.orderService.list().subscribe({
+      next: (res) => {
+        this.orders.set(res.data ?? []);
+        this.scope.set(res.scope);
+        this.role.set(res.role);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        this.loading.set(false);
+        if (err?.status === 401) {
+          this.error.set('Please log in to view your orders.');
+        } else {
+          this.error.set('Could not load orders. Is the backend running?');
+        }
+      },
     });
   }
 
-  private loadInitialCart(): OrderItem[] {
-    const cart = this.parseStorage<OrderItem[]>('mfe-order-cart');
-    if (cart?.length) {
-      return cart;
-    }
-
-    const selected = this.parseStorage<Omit<OrderItem, 'quantity'>>('mfe-selected-product');
-    return selected ? [{ ...selected, quantity: 1 }] : [];
-  }
-
-  private parseStorage<T>(key: string): T | null {
-    const rawValue = localStorage.getItem(key);
-    if (!rawValue) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(rawValue) as T;
-    } catch {
-      return null;
-    }
+  protected itemCount(order: Order): number {
+    return order.items.reduce((sum, item) => sum + item.quantity, 0);
   }
 
   ngOnDestroy(): void {
     window.removeEventListener('mfe:auth-changed', this.authListener);
-    window.removeEventListener('mfe:add-to-order', this.productListener);
+    window.removeEventListener('mfe:order-submitted', this.reload);
   }
 }

@@ -8,6 +8,10 @@ const PAYMENT_METHODS = ["cod", "card", "upi"];
 const FREE_SHIPPING_THRESHOLD = 100;
 const SHIPPING_FEE = 10;
 
+function isSuperAdmin(user) {
+  return user?.role === "super_admin";
+}
+
 function round2(value) {
   return Math.round(value * 100) / 100;
 }
@@ -113,7 +117,16 @@ async function createOrder(req, res) {
       const total = round2(subtotal + shipping);
 
       const created = await orderModel.insert(
-        { ...data, items, subtotal, shipping, total, status: "pending" },
+        {
+          ...data,
+          items,
+          subtotal,
+          shipping,
+          total,
+          status: "pending",
+          userId: req.user?.id ?? null,
+          userEmail: req.user?.email ?? null,
+        },
         client
       );
 
@@ -139,8 +152,15 @@ async function createOrder(req, res) {
 
 async function getOrders(req, res) {
   try {
-    const data = await orderModel.findAll();
-    sendJson(res, 200, { data });
+    const superAdmin = isSuperAdmin(req.user);
+    const data = superAdmin
+      ? await orderModel.findAll()
+      : await orderModel.findByUser(req.user.id);
+    sendJson(res, 200, {
+      data,
+      scope: superAdmin ? "all" : "own",
+      role: req.user.role,
+    });
   } catch (err) {
     console.error("getOrders failed:", err);
     sendJson(res, 500, { message: "Failed to load orders" });
@@ -152,6 +172,11 @@ async function getOrderById(req, res) {
     const order = await orderModel.findById(req.params.id);
     if (!order) {
       sendJson(res, 404, { message: "Order not found" });
+      return;
+    }
+    // A regular user can only see their own order
+    if (!isSuperAdmin(req.user) && order.userId !== req.user.id) {
+      sendJson(res, 403, { message: "You cannot view this order" });
       return;
     }
     sendJson(res, 200, { data: order });

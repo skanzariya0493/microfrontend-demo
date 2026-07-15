@@ -1,7 +1,14 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from './api.config';
+
+// The shell stores the JWT here after login (cross-app contract).
+function authHeaders(): { headers?: HttpHeaders } {
+  const token =
+    typeof localStorage !== 'undefined' ? localStorage.getItem('mfe-token') : '';
+  return token ? { headers: new HttpHeaders({ Authorization: `Bearer ${token}` }) } : {};
+}
 
 export interface OrderItemPayload {
   productId: number;
@@ -53,6 +60,10 @@ export class OrderService {
   private readonly baseUrl = `${API_BASE_URL}/order`;
 
   place(order: OrderPayload): Observable<{ message?: string; data: PlacedOrder }> {
-    return this.http.post<{ message?: string; data: PlacedOrder }>(this.baseUrl, order);
+    return this.http.post<{ message?: string; data: PlacedOrder }>(
+      this.baseUrl,
+      order,
+      authHeaders()
+    );
   }
 }
