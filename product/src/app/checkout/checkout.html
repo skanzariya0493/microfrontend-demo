@@ -163,7 +163,7 @@
         <div class="checkout-actions two">
           <button type="button" class="ghost" (click)="backToAddress()">← Back</button>
           <button type="submit" [disabled]="placing() || cart.items().length === 0">
-            {{ placing() ? 'Placing order…' : 'Place order · $' + (grandTotal() | number: '1.2-2') }}
+            {{ placing() ? 'Placing order…' : 'Place order · ₹' + (grandTotal() | number: '1.2-2') }}
           </button>
         </div>
       }
@@ -179,21 +179,21 @@
           @for (item of cart.items(); track item.id) {
             <li>
               <span class="s-name">{{ item.name }} × {{ item.quantity }}</span>
-              <span class="s-price">${{ item.price * item.quantity | number: '1.2-2' }}</span>
+              <span class="s-price">₹{{ item.price * item.quantity | number: '1.2-2' }}</span>
             </li>
           }
         </ul>
         <div class="summary-line">
           <span>Subtotal</span>
-          <span>${{ cart.totalPrice() | number: '1.2-2' }}</span>
+          <span>₹{{ cart.totalPrice() | number: '1.2-2' }}</span>
         </div>
         <div class="summary-line">
           <span>Shipping</span>
-          <span>{{ shipping() === 0 ? 'Free' : '$' + (shipping() | number: '1.2-2') }}</span>
+          <span>{{ shipping() === 0 ? 'Free' : '₹' + (shipping() | number: '1.2-2') }}</span>
         </div>
         <div class="summary-line grand">
           <span>Total</span>
-          <span>${{ grandTotal() | number: '1.2-2' }}</span>
+          <span>₹{{ grandTotal() | number: '1.2-2' }}</span>
         </div>
       }
     </aside>

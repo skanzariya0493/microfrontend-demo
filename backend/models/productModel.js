@@ -36,10 +36,27 @@ async function findAll() {
   return result.rows.map(normalize);
 }
 
-async function findById(id) {
-  const result = await pool.query(
+async function findById(id, executor = pool) {
+  const result = await executor.query(
     `SELECT ${COLUMNS} FROM products WHERE id = $1`,
     [id]
+  );
+  return normalize(result.rows[0]);
+}
+
+/**
+ * Atomically reduce a product's stock. The `stock >= $1` guard means the row is
+ * only updated when there is enough stock, so concurrent orders cannot oversell.
+ * Returns the updated product, or null if the product is missing or short on stock.
+ * Pass a transaction client as `executor` to run inside a transaction.
+ */
+async function decrementStock(id, quantity, executor = pool) {
+  const result = await executor.query(
+    `UPDATE products
+     SET stock = stock - $1, updated_at = now()
+     WHERE id = $2 AND stock >= $1
+     RETURNING ${COLUMNS}`,
+    [quantity, id]
   );
   return normalize(result.rows[0]);
 }
@@ -85,4 +102,5 @@ module.exports = {
   insert,
   update,
   remove,
+  decrementStock,
 };

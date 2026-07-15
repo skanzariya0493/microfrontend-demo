@@ -12,7 +12,7 @@
         <li class="cart-item">
           <div class="info">
             <strong>{{ item.name }}</strong>
-            <span class="meta">${{ item.price | number: '1.2-2' }} each</span>
+            <span class="meta">₹{{ item.price | number: '1.2-2' }} each</span>
           </div>
 
           <div class="qty">
@@ -21,7 +21,7 @@
             <button type="button" class="step" (click)="cart.increment(item.id)" aria-label="Increase quantity">+</button>
           </div>
 
-          <strong class="line-total">${{ item.price * item.quantity | number: '1.2-2' }}</strong>
+          <strong class="line-total">₹{{ item.price * item.quantity | number: '1.2-2' }}</strong>
 
           <button type="button" class="remove" (click)="cart.remove(item.id)" aria-label="Remove item">✕</button>
         </li>
@@ -32,7 +32,7 @@
       <button type="button" class="ghost" (click)="cart.clear()">Clear cart</button>
       <div class="totals">
         <span>Total items: <strong>{{ cart.totalItems() }}</strong></span>
-        <span class="grand">Total: <strong>${{ cart.totalPrice() | number: '1.2-2' }}</strong></span>
+        <span class="grand">Total: <strong>₹{{ cart.totalPrice() | number: '1.2-2' }}</strong></span>
       </div>
     </div>
 

@@ -59,7 +59,7 @@
           </div>
 
           <div class="card-footer">
-            <strong>${{ product.price }}</strong>
+            <strong>₹{{ product.price }}</strong>
             <div class="card-actions">
               <button type="button" class="link" (click)="edit(product)">Edit</button>
               <button type="button" class="link danger" (click)="remove(product)">Delete</button>
@@ -84,7 +84,7 @@
       <ul class="oc-meta">
         <li><span>Payment</span><strong>{{ order.paymentMethod | uppercase }}</strong></li>
         <li><span>Items</span><strong>{{ order.items.length }}</strong></li>
-        <li><span>Total</span><strong>${{ order.total | number: '1.2-2' }}</strong></li>
+        <li><span>Total</span><strong>₹{{ order.total | number: '1.2-2' }}</strong></li>
         <li><span>Status</span><strong>{{ order.status }}</strong></li>
       </ul>
       <button type="button" class="oc-continue" (click)="dismissOrder()">Continue shopping</button>

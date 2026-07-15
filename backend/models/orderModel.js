@@ -52,8 +52,8 @@ async function initOrderTable() {
   `);
 }
 
-async function insert(data) {
-  const result = await pool.query(
+async function insert(data, executor = pool) {
+  const result = await executor.query(
     `INSERT INTO orders
        (customer_name, email, phone, address_line, city, state, postal_code,
         payment_method, items, subtotal, shipping, total, status)
