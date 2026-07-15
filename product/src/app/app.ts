@@ -106,6 +106,8 @@ export class App implements OnInit, OnDestroy {
   protected onOrderPlaced(order: PlacedOrder): void {
     this.checkingOut.set(false);
     this.placedOrder.set(order);
+    // Stock was reduced on the server — refresh the catalog to show new levels
+    this.loadProducts();
   }
 
   protected dismissOrder(): void {

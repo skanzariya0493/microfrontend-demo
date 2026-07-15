@@ -1,6 +1,8 @@
+const pool = require("../config/db");
 const orderModel = require("../models/orderModel");
 const productModel = require("../models/productModel");
 const { sendJson } = require("../utils/http");
+const { sendOrderConfirmation } = require("../utils/mailer");
 
 const PAYMENT_METHODS = ["cod", "card", "upi"];
 const FREE_SHIPPING_THRESHOLD = 100;
@@ -63,45 +65,72 @@ async function createOrder(req, res) {
       return;
     }
 
-    // Recompute line items and totals from the DB so the client cannot tamper with prices
-    const items = [];
-    let subtotal = 0;
-    for (const raw of rawItems) {
-      const quantity = Number(raw.quantity);
-      if (!Number.isInteger(quantity) || quantity <= 0) {
-        sendJson(res, 400, { message: "Invalid item quantity" });
-        return;
+    // Run everything in one transaction: reserve stock for each item, then save
+    // the order. If any item is short on stock, roll the whole thing back so no
+    // stock is deducted and no order is created.
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+
+      const items = [];
+      let subtotal = 0;
+      for (const raw of rawItems) {
+        const quantity = Number(raw.quantity);
+        if (!Number.isInteger(quantity) || quantity <= 0) {
+          await client.query("ROLLBACK");
+          sendJson(res, 400, { message: "Invalid item quantity" });
+          return;
+        }
+
+        // Atomically reduce stock; null means missing or not enough stock
+        const updated = await productModel.decrementStock(raw.productId, quantity, client);
+        if (!updated) {
+          const existing = await productModel.findById(raw.productId, client);
+          await client.query("ROLLBACK");
+          if (!existing) {
+            sendJson(res, 400, { message: `Product ${raw.productId} is no longer available` });
+          } else {
+            sendJson(res, 400, {
+              message: `Not enough stock for ${existing.name}. Only ${existing.stock} left.`,
+            });
+          }
+          return;
+        }
+
+        const lineTotal = round2(updated.price * quantity);
+        subtotal += lineTotal;
+        items.push({
+          productId: updated.id,
+          name: updated.name,
+          price: updated.price,
+          quantity,
+          lineTotal,
+        });
       }
-      const product = await productModel.findById(raw.productId);
-      if (!product) {
-        sendJson(res, 400, { message: `Product ${raw.productId} is no longer available` });
-        return;
-      }
-      const lineTotal = round2(product.price * quantity);
-      subtotal += lineTotal;
-      items.push({
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        quantity,
-        lineTotal,
-      });
+
+      subtotal = round2(subtotal);
+      const shipping = subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? SHIPPING_FEE : 0;
+      const total = round2(subtotal + shipping);
+
+      const created = await orderModel.insert(
+        { ...data, items, subtotal, shipping, total, status: "pending" },
+        client
+      );
+
+      await client.query("COMMIT");
+
+      // Send confirmation email in the background — never block or fail the order
+      sendOrderConfirmation(created).catch((mailErr) =>
+        console.error("Confirmation email failed:", mailErr.message)
+      );
+
+      sendJson(res, 201, { message: "Order placed", data: created });
+    } catch (txErr) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw txErr;
+    } finally {
+      client.release();
     }
-
-    subtotal = round2(subtotal);
-    const shipping = subtotal > 0 && subtotal < FREE_SHIPPING_THRESHOLD ? SHIPPING_FEE : 0;
-    const total = round2(subtotal + shipping);
-
-    const created = await orderModel.insert({
-      ...data,
-      items,
-      subtotal,
-      shipping,
-      total,
-      status: "pending",
-    });
-
-    sendJson(res, 201, { message: "Order placed", data: created });
   } catch (err) {
     console.error("createOrder failed:", err);
     sendJson(res, 500, { message: "Failed to place order" });
