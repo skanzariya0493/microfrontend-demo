@@ -1,32 +1,57 @@
-const { users } = require('../models/dataStore');
-const { verifyJwt } = require('../utils/jwt');
+const { verifyJwt } = require("../utils/jwt");
+const { sendJson } = require("../utils/http");
 
-function requireAuth(req) {
-  const authorization = req.headers.authorization || '';
-  const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
-
-  if (!token) {
-    const error = new Error('Unauthorized. Login first and send Bearer token.');
-    error.statusCode = 401;
-    throw error;
-  }
-
-  const payload = verifyJwt(token);
-  const user = users.find((item) => item.id === payload.sub);
-
-  if (!user) {
-    const error = new Error('Unauthorized. User no longer exists.');
-    error.statusCode = 401;
-    throw error;
-  }
-
-  req.user = {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  };
-  req.token = payload;
+function extractToken(req) {
+  const authorization = req.headers.authorization || "";
+  return authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
 }
 
-module.exports = { requireAuth };
+function toUser(payload) {
+  return {
+    id: payload.sub,
+    name: payload.name,
+    email: payload.email,
+    role: payload.role,
+  };
+}
+
+// Rejects the request with 401 when there is no valid token.
+function requireAuth(req, res, next) {
+  const token = extractToken(req);
+  if (!token) {
+    return sendJson(res, 401, { message: "Unauthorized. Please log in." });
+  }
+  try {
+    const payload = verifyJwt(token);
+    req.user = toUser(payload);
+    req.token = payload;
+    next();
+  } catch (err) {
+    return sendJson(res, 401, { message: "Session expired. Please log in again." });
+  }
+}
+
+// Must run after requireAuth. Blocks anyone who isn't a super admin.
+function requireSuperAdmin(req, res, next) {
+  if (req.user?.role !== "super_admin") {
+    return sendJson(res, 403, { message: "Only a super admin can perform this action." });
+  }
+  next();
+}
+
+// Attaches req.user when a valid token is present, but never blocks the request.
+function optionalAuth(req, res, next) {
+  const token = extractToken(req);
+  if (token) {
+    try {
+      const payload = verifyJwt(token);
+      req.user = toUser(payload);
+      req.token = payload;
+    } catch {
+      // ignore invalid token — treat as guest
+    }
+  }
+  next();
+}
+
+module.exports = { requireAuth, requireSuperAdmin, optionalAuth };

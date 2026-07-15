@@ -6,19 +6,23 @@ import { CartList } from './cart-list/cart-list';
 import { CartService } from './cart.service';
 import { Checkout } from './checkout/checkout';
 import { PlacedOrder } from './order.service';
+import { ToastContainer } from './toast/toast';
+import { ToastService } from './toast.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [ProductForm, CartList, Checkout, DecimalPipe, UpperCasePipe],
+  imports: [ProductForm, CartList, Checkout, ToastContainer, DecimalPipe, UpperCasePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App implements OnInit, OnDestroy {
   private readonly productService = inject(ProductService);
   protected readonly cart = inject(CartService);
+  private readonly toast = inject(ToastService);
 
   protected readonly userName = signal(localStorage.getItem('mfe-user') ?? '');
+  protected readonly isSuperAdmin = signal(this.readIsSuperAdmin());
   protected readonly lastOrder = signal('');
 
   protected readonly products = signal<Product[]>([]);
@@ -29,8 +33,17 @@ export class App implements OnInit, OnDestroy {
   protected readonly checkingOut = signal(false);
   protected readonly placedOrder = signal<PlacedOrder | null>(null);
 
+  private readIsSuperAdmin(): boolean {
+    return (
+      typeof localStorage !== 'undefined' &&
+      localStorage.getItem('mfe-role') === 'super_admin'
+    );
+  }
+
   private readonly authListener = (event: Event): void => {
     this.userName.set((event as CustomEvent<string>).detail ?? '');
+    // Role may have changed on login/logout — re-read it
+    this.isSuperAdmin.set(this.readIsSuperAdmin());
   };
 
   private readonly orderListener = (event: Event): void => {
@@ -67,8 +80,10 @@ export class App implements OnInit, OnDestroy {
   }
 
   protected onSaved(): void {
+    const wasEditing = this.editingProduct() !== null;
     this.editingProduct.set(null);
     this.loadProducts();
+    this.toast.success(wasEditing ? 'Product updated' : 'Product added');
   }
 
   protected onCancel(): void {
@@ -85,13 +100,15 @@ export class App implements OnInit, OnDestroy {
           this.editingProduct.set(null);
         }
         this.loadProducts();
+        this.toast.success(`${product.name} deleted`);
       },
-      error: () => this.error.set('Failed to delete product'),
+      error: () => this.toast.error('Failed to delete product'),
     });
   }
 
   protected addToCart(product: Product): void {
     this.cart.add(product);
+    this.toast.success(`${product.name} added to cart`);
   }
 
   protected startCheckout(): void {
@@ -106,6 +123,7 @@ export class App implements OnInit, OnDestroy {
   protected onOrderPlaced(order: PlacedOrder): void {
     this.checkingOut.set(false);
     this.placedOrder.set(order);
+    this.toast.success(`Order #${order.id} placed successfully`);
     // Stock was reduced on the server — refresh the catalog to show new levels
     this.loadProducts();
   }

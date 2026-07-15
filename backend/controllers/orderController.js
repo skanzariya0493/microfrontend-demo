@@ -8,6 +8,13 @@ const PAYMENT_METHODS = ["cod", "card", "upi"];
 const FREE_SHIPPING_THRESHOLD = 100;
 const SHIPPING_FEE = 10;
 
+// Ordered delivery stages an order moves through, first to last
+const STAGES = ["pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered"];
+
+function isSuperAdmin(user) {
+  return user?.role === "super_admin";
+}
+
 function round2(value) {
   return Math.round(value * 100) / 100;
 }
@@ -113,7 +120,17 @@ async function createOrder(req, res) {
       const total = round2(subtotal + shipping);
 
       const created = await orderModel.insert(
-        { ...data, items, subtotal, shipping, total, status: "pending" },
+        {
+          ...data,
+          items,
+          subtotal,
+          shipping,
+          total,
+          status: "pending",
+          statusHistory: [{ status: "pending", at: new Date().toISOString() }],
+          userId: req.user?.id ?? null,
+          userEmail: req.user?.email ?? null,
+        },
         client
       );
 
@@ -139,8 +156,15 @@ async function createOrder(req, res) {
 
 async function getOrders(req, res) {
   try {
-    const data = await orderModel.findAll();
-    sendJson(res, 200, { data });
+    const superAdmin = isSuperAdmin(req.user);
+    const data = superAdmin
+      ? await orderModel.findAll()
+      : await orderModel.findByUser(req.user.id);
+    sendJson(res, 200, {
+      data,
+      scope: superAdmin ? "all" : "own",
+      role: req.user.role,
+    });
   } catch (err) {
     console.error("getOrders failed:", err);
     sendJson(res, 500, { message: "Failed to load orders" });
@@ -154,6 +178,11 @@ async function getOrderById(req, res) {
       sendJson(res, 404, { message: "Order not found" });
       return;
     }
+    // A regular user can only see their own order
+    if (!isSuperAdmin(req.user) && order.userId !== req.user.id) {
+      sendJson(res, 403, { message: "You cannot view this order" });
+      return;
+    }
     sendJson(res, 200, { data: order });
   } catch (err) {
     console.error("getOrderById failed:", err);
@@ -161,8 +190,40 @@ async function getOrderById(req, res) {
   }
 }
 
+// Super admin moves an order to the next delivery stage
+async function advanceOrder(req, res) {
+  try {
+    const order = await orderModel.findById(req.params.id);
+    if (!order) {
+      sendJson(res, 404, { message: "Order not found" });
+      return;
+    }
+
+    const currentIndex = STAGES.indexOf(order.status);
+    if (currentIndex === -1) {
+      sendJson(res, 400, { message: `Unknown status "${order.status}"` });
+      return;
+    }
+    if (currentIndex >= STAGES.length - 1) {
+      sendJson(res, 400, { message: "Order is already delivered" });
+      return;
+    }
+
+    const nextStatus = STAGES[currentIndex + 1];
+    const history = Array.isArray(order.statusHistory) ? order.statusHistory : [];
+    const nextHistory = [...history, { status: nextStatus, at: new Date().toISOString() }];
+
+    const updated = await orderModel.updateStatus(order.id, nextStatus, nextHistory);
+    sendJson(res, 200, { message: `Order moved to ${nextStatus}`, data: updated });
+  } catch (err) {
+    console.error("advanceOrder failed:", err);
+    sendJson(res, 500, { message: "Failed to update order status" });
+  }
+}
+
 module.exports = {
   createOrder,
   getOrders,
   getOrderById,
+  advanceOrder,
 };
