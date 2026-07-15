@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../environments/environment';
+import { API_BASE_URL } from './api.config';
 
 export interface OrderItem {
   productId: number;
@@ -46,7 +46,7 @@ export interface OrdersResponse {
 @Injectable({ providedIn: 'root' })
 export class OrderService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiUrl}/order`;
+  private readonly baseUrl = `${API_BASE_URL}/order`;
 
   list(): Observable<OrdersResponse> {
     return this.http.get<OrdersResponse>(this.baseUrl, this.authHeaders());
