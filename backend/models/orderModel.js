@@ -17,6 +17,7 @@ const COLUMNS = `
   shipping,
   total,
   status,
+  status_history AS "statusHistory",
   created_at AS "createdAt"
 `;
 
@@ -55,14 +56,19 @@ async function initOrderTable() {
   // Link orders to the user who placed them (added for existing tables too)
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_id INTEGER;`);
   await pool.query(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS user_email TEXT;`);
+  // Delivery tracking timeline: [{ status, at }]
+  await pool.query(
+    `ALTER TABLE orders ADD COLUMN IF NOT EXISTS status_history JSONB NOT NULL DEFAULT '[]';`
+  );
 }
 
 async function insert(data, executor = pool) {
   const result = await executor.query(
     `INSERT INTO orders
        (customer_name, email, phone, address_line, city, state, postal_code,
-        payment_method, items, subtotal, shipping, total, status, user_id, user_email)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        payment_method, items, subtotal, shipping, total, status, user_id, user_email,
+        status_history)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
      RETURNING ${COLUMNS}`,
     [
       data.customerName,
@@ -80,7 +86,16 @@ async function insert(data, executor = pool) {
       data.status || "pending",
       data.userId ?? null,
       data.userEmail ?? null,
+      JSON.stringify(data.statusHistory ?? []),
     ]
+  );
+  return normalize(result.rows[0]);
+}
+
+async function updateStatus(id, status, statusHistory) {
+  const result = await pool.query(
+    `UPDATE orders SET status = $1, status_history = $2 WHERE id = $3 RETURNING ${COLUMNS}`,
+    [status, JSON.stringify(statusHistory), id]
   );
   return normalize(result.rows[0]);
 }
@@ -106,6 +121,7 @@ async function findById(id) {
 module.exports = {
   initOrderTable,
   insert,
+  updateStatus,
   findAll,
   findByUser,
   findById,

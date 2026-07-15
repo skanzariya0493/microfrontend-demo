@@ -31,6 +31,14 @@ function requireAuth(req, res, next) {
   }
 }
 
+// Must run after requireAuth. Blocks anyone who isn't a super admin.
+function requireSuperAdmin(req, res, next) {
+  if (req.user?.role !== "super_admin") {
+    return sendJson(res, 403, { message: "Only a super admin can perform this action." });
+  }
+  next();
+}
+
 // Attaches req.user when a valid token is present, but never blocks the request.
 function optionalAuth(req, res, next) {
   const token = extractToken(req);
@@ -46,4 +54,4 @@ function optionalAuth(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, optionalAuth };
+module.exports = { requireAuth, requireSuperAdmin, optionalAuth };

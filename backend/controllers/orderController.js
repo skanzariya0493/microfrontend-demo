@@ -8,6 +8,9 @@ const PAYMENT_METHODS = ["cod", "card", "upi"];
 const FREE_SHIPPING_THRESHOLD = 100;
 const SHIPPING_FEE = 10;
 
+// Ordered delivery stages an order moves through, first to last
+const STAGES = ["pending", "confirmed", "packed", "shipped", "out_for_delivery", "delivered"];
+
 function isSuperAdmin(user) {
   return user?.role === "super_admin";
 }
@@ -124,6 +127,7 @@ async function createOrder(req, res) {
           shipping,
           total,
           status: "pending",
+          statusHistory: [{ status: "pending", at: new Date().toISOString() }],
           userId: req.user?.id ?? null,
           userEmail: req.user?.email ?? null,
         },
@@ -186,8 +190,40 @@ async function getOrderById(req, res) {
   }
 }
 
+// Super admin moves an order to the next delivery stage
+async function advanceOrder(req, res) {
+  try {
+    const order = await orderModel.findById(req.params.id);
+    if (!order) {
+      sendJson(res, 404, { message: "Order not found" });
+      return;
+    }
+
+    const currentIndex = STAGES.indexOf(order.status);
+    if (currentIndex === -1) {
+      sendJson(res, 400, { message: `Unknown status "${order.status}"` });
+      return;
+    }
+    if (currentIndex >= STAGES.length - 1) {
+      sendJson(res, 400, { message: "Order is already delivered" });
+      return;
+    }
+
+    const nextStatus = STAGES[currentIndex + 1];
+    const history = Array.isArray(order.statusHistory) ? order.statusHistory : [];
+    const nextHistory = [...history, { status: nextStatus, at: new Date().toISOString() }];
+
+    const updated = await orderModel.updateStatus(order.id, nextStatus, nextHistory);
+    sendJson(res, 200, { message: `Order moved to ${nextStatus}`, data: updated });
+  } catch (err) {
+    console.error("advanceOrder failed:", err);
+    sendJson(res, 500, { message: "Failed to update order status" });
+  }
+}
+
 module.exports = {
   createOrder,
   getOrders,
   getOrderById,
+  advanceOrder,
 };

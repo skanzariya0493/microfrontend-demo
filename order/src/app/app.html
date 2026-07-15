@@ -60,6 +60,42 @@
             <span class="pay">{{ order.paymentMethod | uppercase }} · {{ itemCount(order) }} item(s)</span>
             <span class="total">Total ₹{{ order.total | number: '1.2-2' }}</span>
           </div>
+
+          <!-- Delivery tracking -->
+          <div class="tracker">
+            @for (stage of stages; track stage.key; let i = $index) {
+              <div
+                class="tstep"
+                [class.done]="stageIndex(order.status) > i"
+                [class.current]="stageIndex(order.status) === i"
+              >
+                <span class="tdot">
+                  @if (stageIndex(order.status) > i) { ✓ } @else { {{ i + 1 }} }
+                </span>
+                <span class="tlabel">{{ stage.label }}</span>
+                @if (stageTime(order, stage.key)) {
+                  <span class="ttime">{{ stageTime(order, stage.key) | date: 'MMM d, h:mm a' }}</span>
+                }
+              </div>
+            }
+          </div>
+
+          <div class="track-actions">
+            @if (isDelivered(order)) {
+              <span class="delivered-badge">✓ Delivered</span>
+            } @else if (isSuperAdmin()) {
+              <button
+                type="button"
+                class="advance-btn"
+                [disabled]="advancingId() === order.id"
+                (click)="advance(order)"
+              >
+                {{ advancingId() === order.id ? 'Updating…' : 'Advance to next stage →' }}
+              </button>
+            } @else {
+              <span class="track-hint">We'll update this as your order moves.</span>
+            }
+          </div>
         </article>
       }
     </div>

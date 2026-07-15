@@ -11,6 +11,11 @@ export interface OrderItem {
   lineTotal: number;
 }
 
+export interface StatusChange {
+  status: string;
+  at: string;
+}
+
 export interface Order {
   id: number;
   userId: number | null;
@@ -28,6 +33,7 @@ export interface Order {
   shipping: number;
   total: number;
   status: string;
+  statusHistory: StatusChange[];
   createdAt: string;
 }
 
@@ -44,6 +50,14 @@ export class OrderService {
 
   list(): Observable<OrdersResponse> {
     return this.http.get<OrdersResponse>(this.baseUrl, this.authHeaders());
+  }
+
+  advance(id: number): Observable<{ message?: string; data: Order }> {
+    return this.http.post<{ message?: string; data: Order }>(
+      `${this.baseUrl}/${id}/advance`,
+      {},
+      this.authHeaders()
+    );
   }
 
   private authHeaders(): { headers: HttpHeaders } {
