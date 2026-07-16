@@ -16,11 +16,16 @@
     </div>
   </div>
 
-  @if (scope() === 'all') {
-    <p class="scope-note">You're viewing every customer's order.</p>
-  } @else {
-    <p class="scope-note">You're viewing only the orders you placed.</p>
-  }
+  <div class="scope-row">
+    @if (scope() === 'all') {
+      <p class="scope-note">You're viewing every customer's order.</p>
+    } @else {
+      <p class="scope-note">You're viewing only the orders you placed.</p>
+    }
+    @if (liveConnected()) {
+      <span class="live"><i class="live-dot"></i> Live</span>
+    }
+  </div>
 
   @if (error()) {
     <p class="notice error">{{ error() }}</p>
@@ -31,7 +36,7 @@
   } @else {
     <div class="orders-list">
       @for (order of orders(); track order.id) {
-        <article class="order-card">
+        <article class="order-card" [class.updated]="justUpdatedId() === order.id">
           <div class="order-top">
             <div>
               <span class="order-id">Order #{{ order.id }}</span>

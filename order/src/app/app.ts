@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe, UpperCasePipe } from '@angular/common';
 import { Order, OrderService } from './order.service';
+import { API_BASE_URL } from './api.config';
 
 interface Stage {
   key: string;
@@ -36,6 +37,10 @@ export class App implements OnInit, OnDestroy {
   protected readonly scope = signal<'all' | 'own'>('own');
   protected readonly role = signal('');
   protected readonly advancingId = signal<number | null>(null);
+  protected readonly liveConnected = signal(false);
+  protected readonly justUpdatedId = signal<number | null>(null);
+
+  private eventSource?: EventSource;
 
   private readIsSuperAdmin(): boolean {
     return (
@@ -48,6 +53,7 @@ export class App implements OnInit, OnDestroy {
     this.userName.set((event as CustomEvent<string>).detail ?? '');
     this.isSuperAdmin.set(this.readIsSuperAdmin());
     this.loadOrders();
+    this.connectStream();
   };
 
   constructor() {
@@ -57,6 +63,52 @@ export class App implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadOrders();
+    this.connectStream();
+  }
+
+  /** Open a live Server-Sent Events connection for instant order updates. */
+  private connectStream(): void {
+    if (typeof EventSource === 'undefined') {
+      return;
+    }
+    const token =
+      typeof localStorage !== 'undefined' ? localStorage.getItem('mfe-token') : '';
+    if (!token) {
+      return;
+    }
+
+    this.eventSource?.close();
+    const url = `${API_BASE_URL}/order/stream?token=${encodeURIComponent(token)}`;
+    const es = new EventSource(url);
+
+    es.addEventListener('connected', () => this.liveConnected.set(true));
+    es.addEventListener('order-updated', (e: MessageEvent) => {
+      try {
+        this.applyOrderUpdate(JSON.parse(e.data) as Order);
+      } catch {
+        /* ignore malformed event */
+      }
+    });
+    es.onerror = () => this.liveConnected.set(false); // EventSource auto-reconnects
+
+    this.eventSource = es;
+  }
+
+  /** Merge a pushed order into the list and briefly highlight it. */
+  private applyOrderUpdate(order: Order): void {
+    this.orders.update((list) => {
+      if (list.some((o) => o.id === order.id)) {
+        return list.map((o) => (o.id === order.id ? order : o));
+      }
+      // A brand-new order the admin should see immediately
+      return this.scope() === 'all' ? [order, ...list] : list;
+    });
+    this.justUpdatedId.set(order.id);
+    setTimeout(() => {
+      if (this.justUpdatedId() === order.id) {
+        this.justUpdatedId.set(null);
+      }
+    }, 2500);
   }
 
   private readonly reload = (): void => this.loadOrders();
@@ -120,5 +172,6 @@ export class App implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     window.removeEventListener('mfe:auth-changed', this.authListener);
     window.removeEventListener('mfe:order-submitted', this.reload);
+    this.eventSource?.close();
   }
 }

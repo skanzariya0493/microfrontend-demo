@@ -7,7 +7,12 @@ const {
   getOrderById,
   advanceOrder,
 } = require("../controllers/orderController");
+const { streamOrders } = require("../controllers/orderEvents");
 const { requireAuth, requireSuperAdmin, optionalAuth } = require("../middleware/auth");
+
+// Live updates via Server-Sent Events (auth via ?token= because EventSource
+// can't set headers). Must be declared before "/:id".
+router.get("/stream", streamOrders);
 
 // Reading orders requires login; the controller filters by role
 // (super_admin sees all, everyone else sees only their own).
