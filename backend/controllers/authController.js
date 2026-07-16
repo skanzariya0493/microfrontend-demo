@@ -34,7 +34,7 @@ async function signup(req, res) {
     // Encrypt password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
+    // Insert user — public signups are always customers (never self-assign admin)
     const result = await pool.query(
       `
       INSERT INTO admins
@@ -43,11 +43,12 @@ async function signup(req, res) {
         last_name,
         email,
         password,
-        phone
+        phone,
+        role
       )
       VALUES
       (
-        $1,$2,$3,$4,$5
+        $1,$2,$3,$4,$5,$6
       )
       RETURNING
         id,
@@ -62,7 +63,8 @@ async function signup(req, res) {
         lastName,
         email,
         hashedPassword,
-        phone
+        phone,
+        "customer"
       ]
     );
 

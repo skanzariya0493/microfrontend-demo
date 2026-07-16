@@ -3,6 +3,7 @@ const orderModel = require("../models/orderModel");
 const productModel = require("../models/productModel");
 const { sendJson } = require("../utils/http");
 const { sendOrderConfirmation } = require("../utils/mailer");
+const { broadcastOrderUpdate } = require("./orderEvents");
 
 const PAYMENT_METHODS = ["cod", "card", "upi"];
 const FREE_SHIPPING_THRESHOLD = 100;
@@ -214,6 +215,10 @@ async function advanceOrder(req, res) {
     const nextHistory = [...history, { status: nextStatus, at: new Date().toISOString() }];
 
     const updated = await orderModel.updateStatus(order.id, nextStatus, nextHistory);
+
+    // Push the change live to the customer (and any connected super admin)
+    broadcastOrderUpdate(updated);
+
     sendJson(res, 200, { message: `Order moved to ${nextStatus}`, data: updated });
   } catch (err) {
     console.error("advanceOrder failed:", err);
