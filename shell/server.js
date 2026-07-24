@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DIST = path.join(__dirname, 'dist', 'shell');
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 4200;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
